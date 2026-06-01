@@ -54,6 +54,11 @@ import AdminLayout from "./pages/Admin/AdminLayout";
 import AdminProducts from "./pages/Admin/AdminProducts";
 import AdminOrders from "./pages/Admin/AdminOrders";
 import AdminUsers from "./pages/Admin/AdminUsers";
+import AdminCreateProduct from "./pages/Admin/AdminCreateProduct";
+import AdminColors from "./pages/Admin/AdminColors";
+import AdminKeywords from "./pages/Admin/AdminKeywords";
+import AdminSeries from "./pages/Admin/AdminSeries";
+import AdminCategories from "./pages/Admin/AdminCategories";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -163,6 +168,11 @@ function App() {
                       <Route path="products" element={<AdminProducts />} />
                       <Route path="orders" element={<AdminOrders />} />
                       <Route path="users" element={<AdminUsers />} />
+                      <Route path="create-product" element={<AdminCreateProduct />} />
+                      <Route path="colors" element={<AdminColors />} />
+                      <Route path="keywords" element={<AdminKeywords />} />
+                      <Route path="series" element={<AdminSeries />} />
+                      <Route path="categories" element={<AdminCategories />} />
                     </Route>
 
                     {/* 404 */}

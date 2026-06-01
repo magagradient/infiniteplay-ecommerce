@@ -1,8 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -24,6 +26,12 @@ export default function Navbar() {
         <NavLink to="/sold" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>Sold</NavLink>
         <NavLink to="/about" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>About</NavLink>
         <NavLink to="/contact" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>Contact</NavLink>
+
+        {user?.role === "admin" && (
+          <NavLink to="/admin/products" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""} border border-[#ffb4ab]/40 px-3`}>
+            Admin
+          </NavLink>
+        )}
 
       </div>
     </div>

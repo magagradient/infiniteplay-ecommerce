@@ -15,7 +15,9 @@ export default function ProductList({ filter, searchQuery, colors, keywords, ser
     if (keywords) params.append("keywords", keywords);
     if (series) params.append("series", series);
   
-    const queryString = params.toString() ? `?${params.toString()}` : "";
+    const queryString = params.toString() 
+    ? `?${params.toString().replace(/\+/g, "%20")}` 
+    : "";
     
   
     if (searchQuery) {
