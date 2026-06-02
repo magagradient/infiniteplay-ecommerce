@@ -3,6 +3,8 @@ const {
   Categories,
   Series,
   ProductImages,
+  Keywords,
+  Colors,
 } = require("../../../database/indexModels");
 
 const { successResponse, errorResponse } = require("../../../utils/responseHelper");
@@ -26,6 +28,16 @@ const getProducts = async (req, res) => {
           separate: true,
           limit: 1,
           order: [["image_type", "DESC"]],
+        },
+        {
+          model: Keywords,
+          as: "keywords",
+          through: { attributes: [] },
+        },
+        {
+          model: Colors,
+          as: "colors",
+          through: { attributes: [] },
         },
       ],
       order: [["createdAt", "DESC"]],

@@ -1,4 +1,4 @@
-const { Products } = require("../../../database/indexModels");
+const { Products, Colors, Keywords, Series } = require("../../../database/indexModels");
 const { successResponse, errorResponse } = require("../../../utils/responseHelper");
 
 const updateProduct = async (req, res) => {
@@ -7,12 +7,15 @@ const updateProduct = async (req, res) => {
     const {
       title,
       description,
+      description_long,
       price,
       is_sold,
       is_deleted,
       visible_in_portfolio,
       id_category,
       id_series,
+      colors,
+      keywords,
     } = req.body;
 
     const product = await Products.findByPk(id);
@@ -24,6 +27,7 @@ const updateProduct = async (req, res) => {
     await product.update({
       ...(title !== undefined && { title }),
       ...(description !== undefined && { description }),
+      ...(description_long !== undefined && { description_long }),
       ...(price !== undefined && { price }),
       ...(is_sold !== undefined && { is_sold }),
       ...(is_deleted !== undefined && { is_deleted }),
@@ -31,6 +35,16 @@ const updateProduct = async (req, res) => {
       ...(id_category !== undefined && { id_category }),
       ...(id_series !== undefined && { id_series }),
     });
+
+    // actualizar colores si vienen
+    if (colors !== undefined) {
+      await product.setColors(colors);
+    }
+
+    // actualizar keywords si vienen
+    if (keywords !== undefined) {
+      await product.setKeywords(keywords);
+    }
 
     return successResponse(res, product.get({ plain: true }), "admin_updateProduct");
   } catch (error) {

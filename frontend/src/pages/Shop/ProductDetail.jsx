@@ -79,6 +79,11 @@ export default function ProductDetail() {
               {product.title}
             </h1>
             <p className="text-[#cbc4d2] text-sm mb-4">{product.description}</p>
+            {product.description_long && (
+              <p className="text-[#cbc4d2] text-sm border-l border-[#494551] pl-4 mt-2">
+                {product.description_long}
+              </p>
+            )}
           </div>
 
           <div className="border-t border-[#494551] pt-4">
