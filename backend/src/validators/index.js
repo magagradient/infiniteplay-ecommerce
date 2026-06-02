@@ -13,7 +13,10 @@ const {
   statusParamSchema,
   updateRelationsSchema,
   productsArraySchema,
+  assignRelationParamsSchema,
+  assignRelationSchema,
 } = require('./products');
+
 
 // categories
 const {
@@ -197,11 +200,13 @@ module.exports = {
   statusParamSchema,
   updateRelationsSchema,
   productsArraySchema,
+  assignRelationParamsSchema,
+  assignRelationSchema,
 
   // favoriteProducts
   favoriteProductCreateSchema,
   favoriteProductParamsSchema,
-  
+
   // categories
   categoryCreateSchema,
   categoryUpdateSchema,

@@ -157,6 +157,8 @@ export default function AdminCreateProduct() {
       });
 
       const data = await res.json();
+      console.log("RESPUESTA CREATE:", data);
+
 
       if (!res.ok) {
         setError(data.description || data.message || "Error al crear producto");
@@ -165,6 +167,7 @@ export default function AdminCreateProduct() {
       }
 
       const newProductId = data.data?.id_product;
+      console.log("NEW PRODUCT ID:", newProductId);
 
       if (imageFile && newProductId) {
         const formData = new FormData();
@@ -279,8 +282,15 @@ export default function AdminCreateProduct() {
 
         <div>
           <label className="text-[#494551] text-xs uppercase tracking-widest block mb-1">Imagen (cover)</label>
-          <input type="file" accept="image/*" onChange={handleImage}
-            className="w-full bg-[#1d1b20] border border-[#494551] text-[#cbc4d2] px-3 py-2 text-sm focus:border-[#ffb4ab] outline-none" />
+          <label className="w-full px-4 py-2 border border-[#494551] text-[#cbc4d2] text-xs uppercase tracking-widest hover:border-[#ffb4ab] hover:text-[#ffb4ab] transition-colors cursor-pointer block">
+            {imageFile ? imageFile.name.substring(0, 30) + "..." : "ELEGIR ARCHIVO"}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImage}
+              className="hidden"
+            />
+          </label>
           {imagePreview && (
             <img src={imagePreview} alt="preview" className="mt-3 w-40 h-40 object-cover border border-[#494551]" />
           )}

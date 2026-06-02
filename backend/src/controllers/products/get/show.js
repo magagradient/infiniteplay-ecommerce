@@ -13,7 +13,8 @@ const { successResponse, errorResponse } = require("../../../utils/responseHelpe
 
 const show = async (req, res) => {
   try {
-      const product = await Products.findByPk(req.params.id, {
+    const product = await Products.findOne({
+      where: { id_product: req.params.id, is_deleted: false },
           attributes: {
               exclude: ['created_at', 'updated_at']
           },

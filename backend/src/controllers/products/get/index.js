@@ -36,12 +36,14 @@ const index = async (req, res) => {
     const offset = (Number(page) - 1) * Number(limit);
 
     const where = {};
+    where.is_deleted = false;
     if (title) where.title = { [Op.like]: `%${title}%` };
     if (description) where.description = { [Op.like]: `%${description}%` };
     if (price_min) where.price = { ...(where.price || {}), [Op.gte]: Number(price_min) };
     if (price_max) where.price = { ...(where.price || {}), [Op.lte]: Number(price_max) };
     if (is_sold !== undefined) where.is_sold = is_sold === "true";
     if (visible_in_portfolio !== undefined) where.visible_in_portfolio = visible_in_portfolio === "true";
+    
 
     const include = [
       {

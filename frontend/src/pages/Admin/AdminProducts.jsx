@@ -236,6 +236,26 @@ export default function AdminProducts() {
                           value={editForm.description_long}
                           onChange={(e) => setEditForm({ ...editForm, description_long: e.target.value })}
                         />
+                        <div className="flex gap-6 pt-1">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editForm.is_sold}
+                              onChange={(e) => setEditForm({ ...editForm, is_sold: e.target.checked })}
+                              className="accent-[#ffb4ab] w-4 h-4"
+                            />
+                            <span className="text-[#cbc4d2] text-xs uppercase tracking-widest">Vendido</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editForm.visible_in_portfolio}
+                              onChange={(e) => setEditForm({ ...editForm, visible_in_portfolio: e.target.checked })}
+                              className="accent-[#ffb4ab] w-4 h-4"
+                            />
+                            <span className="text-[#cbc4d2] text-xs uppercase tracking-widest">Visible en catálogo</span>
+                          </label>
+                        </div>
                       </div>
                     </td>
                   </tr>
