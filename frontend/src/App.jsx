@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
 import FavoritesProvider from "./context/FavoritesContext";
@@ -32,7 +32,6 @@ import Contact from "./pages/Contact.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 // Cart
-import Cart from "./pages/Cart/Cart.jsx";
 import Checkout from "./pages/Cart/Checkout.jsx";
 import CheckoutSuccess from "./pages/Cart/CheckoutSuccess.jsx";
 import CheckoutFailure from "./pages/Cart/CheckoutFailure.jsx";
@@ -101,7 +100,8 @@ function App() {
                     <Route path="/lab" element={<Lab />} />
 
                     {/* Cart */}
-                    <Route path="/cart" element={<Cart />} />
+                    {/* Cart */}
+                    <Route path="/cart" element={<Navigate to="/cart/checkout" replace />} />
                     <Route path="/cart/checkout" element={<Checkout />} />
                     <Route path="/checkout/success" element={<CheckoutSuccess />} />
                     <Route path="/checkout/failure" element={<CheckoutFailure />} />

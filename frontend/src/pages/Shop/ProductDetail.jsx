@@ -10,6 +10,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState(null);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [mainWatermark, setMainWatermark] = useState(null);
   const { formatPrice } = useLocation();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function ProductDetail() {
         if (res.ok) {
           setProduct(data.data.product);
           setMainImage(data.data.product.images?.[0]?.image_url || null);
+          setMainWatermark(data.data.product.images?.[0]?.watermark_url || null);
         }
       } catch (error) {
         console.error("Error al traer producto:", error);
@@ -57,7 +59,7 @@ export default function ProductDetail() {
               {product.images.map((img) => (
                 <button
                   key={img.id_image}
-                  onClick={() => setMainImage(img.image_url)}
+                  onClick={() => { setMainImage(img.image_url); setMainWatermark(img.watermark_url || null); }}
                   className={`w-16 h-16 overflow-hidden border transition-all ${mainImage === img.image_url ? "border-[#ffb4ab]" : "border-[#494551] hover:border-[#ffb4ab]"}`}
                 >
                   <img src={img.image_url} alt="" className="w-full h-full object-cover" />
@@ -131,7 +133,7 @@ export default function ProductDetail() {
           onClick={() => setZoomOpen(false)}
         >
           <img
-            src={mainImage}
+            src={mainWatermark || mainImage}
             alt={product.title}
             className="max-h-screen max-w-screen object-contain"
           />

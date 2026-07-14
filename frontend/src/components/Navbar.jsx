@@ -12,23 +12,51 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const baseClass = "text-[#ffb4ab] hover:text-error hover:skew-x-2 hover:bg-[#ffb4ab]/10 transition-all duration-75 uppercase px-2 py-1 text-label-sm";
-  const activeClass = "text-error border-b border-error pb-1";
+  const baseClass = "relative text-[var(--color-text)] hover:text-[var(--color-accent)] hover:skew-x-2 hover:bg-[var(--color-accent)]/10 transition-all duration-75 uppercase px-2 py-1 text-label-sm";
+  const activeClass = "text-[var(--color-accent)] border-b border-[var(--color-accent)] pb-1";
   const linkStyle = { fontFamily: "Space Grotesk" };
 
+  const renderLink = (to, label, end = false) => (
+    <NavLink
+      to={to}
+      end={end}
+      style={linkStyle}
+      className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}
+    >
+      {({ isActive }) => (
+        <>
+          {label}
+          {isActive && (
+            <span
+              className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+              style={{ background: "var(--color-accent-secondary)" }}
+            />
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+
   return (
-    <div className={`fixed top-16 left-0 w-full h-12 z-40 transition-colors duration-300 ${scrolled ? "bg-[#381e72] border-none" : "bg-transparent border-none"}`}>
+    <div
+      className={`fixed top-16 left-0 w-full h-12 z-40 transition-colors duration-300 ${scrolled ? "bg-[var(--color-bg-light)]" : "bg-transparent"
+        }`}
+    >
       <div className="max-w-screen-xl mx-auto h-full flex items-center justify-center gap-8">
 
-        <NavLink to="/" end style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>Home</NavLink>
-        <NavLink to="/shop" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>Shop</NavLink>
-        <NavLink to="/products" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>Products</NavLink>
-        <NavLink to="/sold" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>Sold</NavLink>
-        <NavLink to="/about" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>About</NavLink>
-        <NavLink to="/contact" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""}`}>Contact</NavLink>
+        {renderLink("/", "Home", true)}
+        {renderLink("/shop", "Shop")}
+        {renderLink("/products", "Products")}
+        {renderLink("/sold", "Sold")}
+        {renderLink("/about", "About")}
+        {renderLink("/contact", "Contact")}
 
         {user?.role === "admin" && (
-          <NavLink to="/admin/products" style={linkStyle} className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""} border border-[#ffb4ab]/40 px-3`}>
+          <NavLink
+            to="/admin/products"
+            style={linkStyle}
+            className={({ isActive }) => `${baseClass} ${isActive ? activeClass : ""} border border-[var(--color-accent-secondary)]/50 px-3`}
+          >
             Admin
           </NavLink>
         )}

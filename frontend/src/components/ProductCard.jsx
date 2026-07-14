@@ -42,16 +42,25 @@ export default function ProductCard({ product, onCardClick }) {
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isHovered ? "opacity-100" : "opacity-0"}`}
         />
       )}
-      <div className="absolute top-4 left-4 bg-[#141218]/90 text-[#ffb4ab] text-xs px-2 py-1 backdrop-blur-sm border border-[#ffb4ab] uppercase tracking-widest">
+      <div className="absolute top-4 left-4 text-xs px-2 py-1 backdrop-blur-sm border uppercase tracking-widest"
+        style={{ background: "var(--color-bg-dark)", color: "var(--color-accent)", borderColor: "var(--color-accent)" }}>
         {product.id_product?.toString().padStart(2, "0")}_{product.title?.split(" ")[0]?.toUpperCase()}
       </div>
+
+      {/* Corner tick en cian, aparece solo en hover */}
+      <div
+        className={`absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}
+        style={{ borderColor: "var(--color-accent-secondary)" }}
+      />
     </div>
   );
 
   return (
     <div
-      className="group relative bg-[#1d1b20] border border-[#494551] overflow-hidden hover:border-[#ffb4ab] transition-colors"
-      style={{ fontFamily: "Space Grotesk" }}
+      className="group relative overflow-hidden transition-colors border"
+      style={{ background: "var(--color-bg-light)", borderColor: "var(--color-text-muted)", fontFamily: "Space Grotesk" }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-accent)"}
+      onMouseLeave={e => e.currentTarget.style.borderColor = "var(--color-text-muted)"}
     >
       {onCardClick ? (
         <div onClick={() => onCardClick(product)} className="cursor-pointer">
@@ -65,16 +74,17 @@ export default function ProductCard({ product, onCardClick }) {
 
       <div className="p-4 flex justify-between items-center">
         <div>
-          <h3 className="text-[#e6e0e9] font-bold uppercase tracking-tight text-sm mb-1">
+          <h3 className="font-bold uppercase tracking-tight text-sm mb-1" style={{ color: "var(--color-text)" }}>
             {product.title || "Producto sin nombre"}
           </h3>
-          <p className="text-[#cbc4d2] text-xs uppercase">
-            {formatPrice(product.price || 0)} // LIC_BASIC
+          <p className="text-xs uppercase" style={{ color: "var(--color-text-muted)" }}>
+            {formatPrice(product.price || 0)} <span style={{ color: "var(--color-accent-secondary)" }}>// LIC_BASIC</span>
           </p>
           {onCardClick && (
             <button
               onClick={(e) => { e.preventDefault(); onCardClick(product); }}
-              className="text-[#381e72] text-xs uppercase tracking-widest hover:text-[#ffb4ab] transition-colors mt-1"
+              className="text-xs uppercase tracking-widest transition-colors mt-1"
+              style={{ color: "var(--color-accent-secondary)" }}
             >
               VER_ARTISTA
             </button>
@@ -83,16 +93,21 @@ export default function ProductCard({ product, onCardClick }) {
         <div className="flex items-center gap-2">
           <button
             onClick={toggleFavorite}
-            className={`w-10 h-10 border flex items-center justify-center transition-all ${fav
-              ? "bg-[#381e72] border-[#381e72] text-[#e6e0e9]"
-              : "border-[#494551] text-[#cbc4d2] hover:border-[#381e72] hover:text-[#381e72]"
-              }`}
+            className="w-10 h-10 border flex items-center justify-center transition-all"
+            style={{
+              background: fav ? "var(--color-accent)" : "transparent",
+              borderColor: fav ? "var(--color-accent)" : "var(--color-text-muted)",
+              color: "var(--color-text)",
+            }}
           >
             ♥
           </button>
           <button
             onClick={(e) => { e.preventDefault(); addToCart(product.id_product); }}
-            className="w-10 h-10 bg-[#ffb4ab] text-[#690005] flex items-center justify-center hover:bg-transparent hover:border hover:border-[#ffb4ab] hover:text-[#ffb4ab] transition-all"
+            className="w-10 h-10 flex items-center justify-center transition-all border"
+            style={{ background: "var(--color-accent)", borderColor: "var(--color-accent)", color: "var(--color-text)" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-accent)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--color-accent)"; e.currentTarget.style.color = "var(--color-text)"; }}
           >
             <span className="material-symbols-outlined text-base">add_shopping_cart</span>
           </button>
