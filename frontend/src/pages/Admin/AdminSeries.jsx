@@ -48,19 +48,19 @@ export default function AdminSeries() {
     }
   };
 
-  if (loading) return <p className="text-[#cbc4d2] text-xs uppercase tracking-widest">[CARGANDO...]</p>;
+  if (loading) return <p className="text-text-muted text-xs uppercase tracking-widest">[CARGANDO...]</p>;
 
   return (
     <div>
       <div className="mb-8">
-        <div className="inline-block px-2 py-1 bg-[#ffb4ab] text-[#690005] text-xs font-semibold uppercase tracking-[0.4em] mb-3">
+        <div className="inline-block px-2 py-1 bg-accent text-bg-dark text-xs font-semibold uppercase tracking-[0.4em] mb-3">
           ADMIN
         </div>
-        <h1 className="text-[#e6e0e9] text-3xl font-bold uppercase tracking-tighter">
+        <h1 className="text-text-primary text-3xl font-bold uppercase tracking-tighter">
           SERIES
         </h1>
-        <p className="text-[#494551] text-xs uppercase tracking-widest mt-1">
-          // {series.length} SERIES EN TOTAL
+        <p className="text-text-muted text-xs uppercase tracking-widest mt-1">
+          // <span className="text-accent-secondary">{series.length}</span> SERIES EN TOTAL
         </p>
       </div>
 
@@ -70,30 +70,29 @@ export default function AdminSeries() {
           onChange={e => setNewSeries(e.target.value)}
           onKeyDown={e => e.key === "Enter" && create()}
           placeholder="nueva serie..."
-          className="flex-1 bg-[#1d1b20] border border-[#494551] text-[#e6e0e9] px-3 py-2 text-xs uppercase tracking-widest focus:border-[#ffb4ab] outline-none"
+          className="flex-1 bg-bg-light border border-text-muted/30 text-text-primary px-3 py-2 text-xs uppercase tracking-widest focus:border-accent-secondary outline-none"
         />
         <button
           onClick={create}
-          className="px-4 py-2 bg-[#ffb4ab] text-[#690005] text-xs font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
+          className="px-4 py-2 bg-accent text-bg-dark text-xs font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
         >
           AGREGAR
         </button>
       </div>
 
       {error && (
-        <p className="text-[#690005] text-xs uppercase tracking-widest border border-[#690005] px-3 py-2 mb-4 max-w-md">{error}</p>
+        <p className="text-accent text-xs uppercase tracking-widest border border-accent px-3 py-2 mb-4 max-w-md">{error}</p>
       )}
-
       <div className="flex flex-wrap gap-2">
         {series.map(s => (
           <div
             key={s.id_series}
-            className="flex items-center gap-2 border border-[#494551] px-3 py-1 hover:border-[#ffb4ab] transition-colors"
+            className="flex items-center gap-2 border border-accent-secondary/40 px-3 py-1 hover:border-accent-secondary transition-colors"
           >
-            <span className="text-[#cbc4d2] text-xs uppercase tracking-widest">{s.title}</span>
+            <span className="text-accent-secondary text-xs uppercase tracking-widest">{s.title}</span>
             <button
               onClick={() => destroy(s.id_series)}
-              className="text-[#494551] hover:text-[#690005] transition-colors text-xs"
+              className="text-accent-secondary hover:text-accent transition-colors text-xs"
             >
               ✕
             </button>

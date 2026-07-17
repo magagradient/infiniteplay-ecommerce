@@ -21,10 +21,7 @@ export default function AdminKeywords() {
     if (!newKeyword.trim()) return;
     const res = await fetch(`${API}/keywords`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ name: newKeyword.trim().toLowerCase() }),
     });
     const data = await res.json();
@@ -43,23 +40,21 @@ export default function AdminKeywords() {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) {
-      setKeywords(prev => prev.filter(k => k.id_keyword !== id));
-    }
+    if (res.ok) setKeywords(prev => prev.filter(k => k.id_keyword !== id));
   };
 
-  if (loading) return <p className="text-[#cbc4d2] text-xs uppercase tracking-widest">[CARGANDO...]</p>;
+  if (loading) return <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>[CARGANDO...]</p>;
 
   return (
-    <div>
+    <div style={{ fontFamily: "Space Grotesk" }}>
       <div className="mb-8">
-        <div className="inline-block px-2 py-1 bg-[#ffb4ab] text-[#690005] text-xs font-semibold uppercase tracking-[0.4em] mb-3">
+        <div className="inline-block px-2 py-1 text-xs font-semibold uppercase tracking-[0.4em] mb-3" style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
           ADMIN
         </div>
-        <h1 className="text-[#e6e0e9] text-3xl font-bold uppercase tracking-tighter">
+        <h1 className="text-3xl font-bold uppercase tracking-tighter" style={{ color: "var(--color-text)" }}>
           KEYWORDS
         </h1>
-        <p className="text-[#494551] text-xs uppercase tracking-widest mt-1">
+        <p className="text-xs uppercase tracking-widest mt-1" style={{ color: "var(--color-text-muted)" }}>
           // {keywords.length} KEYWORDS EN TOTAL
         </p>
       </div>
@@ -70,30 +65,40 @@ export default function AdminKeywords() {
           onChange={e => setNewKeyword(e.target.value)}
           onKeyDown={e => e.key === "Enter" && create()}
           placeholder="nueva keyword..."
-          className="flex-1 bg-[#1d1b20] border border-[#494551] text-[#e6e0e9] px-3 py-2 text-xs uppercase tracking-widest focus:border-[#ffb4ab] outline-none"
+          className="flex-1 px-3 py-2 text-xs uppercase tracking-widest outline-none"
+          style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-text-muted)", color: "var(--color-text)" }}
+          onFocus={e => e.target.style.borderColor = "var(--color-accent)"}
+          onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"}
         />
         <button
           onClick={create}
-          className="px-4 py-2 bg-[#ffb4ab] text-[#690005] text-xs font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
+          className="px-4 py-2 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-80"
+          style={{ background: "var(--color-accent)", color: "var(--color-text)" }}
         >
           AGREGAR
         </button>
       </div>
 
       {error && (
-        <p className="text-[#690005] text-xs uppercase tracking-widest border border-[#690005] px-3 py-2 mb-4 max-w-md">{error}</p>
+        <p className="text-xs uppercase tracking-widest px-3 py-2 mb-4 max-w-md" style={{ color: "var(--color-accent)", border: "1px solid var(--color-accent)" }}>{error}</p>
       )}
 
       <div className="flex flex-wrap gap-2">
         {keywords.map(k => (
           <div
             key={k.id_keyword}
-            className="flex items-center gap-2 border border-[#494551] px-3 py-1 hover:border-[#ffb4ab] transition-colors"
+            className="flex items-center gap-2 px-3 py-1 transition-colors"
+            style={{ border: "1px solid var(--color-accent-secondary)" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-accent)"}
+            onMouseLeave={e => e.currentTarget.style.borderColor = "var(--color-accent-secondary)"}
           >
-            <span className="text-[#cbc4d2] text-xs uppercase tracking-widest">{k.name}</span>
+            <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-accent-secondary)" }}>{k.name}</span>
             <button
               onClick={() => destroy(k.id_keyword)}
-              className="text-[#494551] hover:text-[#690005] transition-colors text-xs"
+              className="text-xs transition-colors"
+              style={{ color: "var(--color-accent-secondary)" }}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--color-accent)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--color-accent-secondary)"}
             >
               ✕
             </button>

@@ -19,46 +19,46 @@ export default function AdminOrders() {
   }, [token]);
 
   const statusColor = (status) => {
-    if (status === "paid") return "bg-[#381e72] text-[#ffb4ab]";
-    if (status === "pending") return "bg-[#1d1b20] text-[#cbc4d2]";
-    return "bg-[#690005] text-[#ffb4ab]";
+    if (status === "paid") return "bg-bg-light text-accent-secondary";
+    if (status === "pending") return "bg-bg-light text-text-muted";
+    return "bg-accent/20 text-accent";
   };
 
-  if (loading) return <p className="text-[#cbc4d2] text-xs uppercase tracking-widest">[CARGANDO...]</p>;
+  if (loading) return <p className="text-text-muted text-xs uppercase tracking-widest">[CARGANDO...]</p>;
 
   return (
     <div>
       <div className="mb-8">
-        <div className="inline-block px-2 py-1 bg-[#ffb4ab] text-[#690005] text-xs font-semibold uppercase tracking-[0.4em] mb-3">
+        <div className="inline-block px-2 py-1 bg-accent text-bg-dark text-xs font-semibold uppercase tracking-[0.4em] mb-3">
           ADMIN
         </div>
-        <h1 className="text-[#e6e0e9] text-3xl font-bold uppercase tracking-tighter">
+        <h1 className="text-text-primary text-3xl font-bold uppercase tracking-tighter">
           ORDENES
         </h1>
-        <p className="text-[#494551] text-xs uppercase tracking-widest mt-1">
-          // {orders.length} ORDENES EN TOTAL
+        <p className="text-text-muted text-xs uppercase tracking-widest mt-1">
+          // <span className="text-accent-secondary">{orders.length}</span> ORDENES EN TOTAL
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
         {orders.map((o) => (
-          <div key={o.id_order} className="border border-[#494551] hover:border-[#ffb4ab]/40 transition-colors">
+          <div key={o.id_order} className="border border-text-muted/30 hover:border-accent-secondary/50 transition-colors">
 
             <div
               className="flex items-center justify-between px-4 py-3 cursor-pointer"
               onClick={() => setExpanded(expanded === o.id_order ? null : o.id_order)}
             >
               <div className="flex items-center gap-6">
-                <span className="text-[#494551] text-xs uppercase tracking-widest w-8">
+                <span className="text-text-muted text-xs uppercase tracking-widest w-8">
                   #{o.id_order}
                 </span>
-                <span className="text-[#e6e0e9] text-xs uppercase tracking-widest">
+                <span className="text-text-primary text-xs uppercase tracking-widest">
                   {o.user?.name || "--"}
                 </span>
-                <span className="text-[#494551] text-xs">
+                <span className="text-text-muted text-xs">
                   {new Date(o.order_date).toLocaleDateString("es-AR")}
                 </span>
-                <span className="text-[#cbc4d2] text-xs">
+                <span className="text-text-muted text-xs">
                   ${o.total}
                 </span>
               </div>
@@ -66,20 +66,20 @@ export default function AdminOrders() {
                 <span className={`px-2 py-1 text-xs uppercase tracking-widest ${statusColor(o.status)}`}>
                   {o.status}
                 </span>
-                <span className="text-[#494551] text-xs">
+                <span className="text-text-muted text-xs">
                   {expanded === o.id_order ? "A" : "V"}
                 </span>
               </div>
             </div>
 
             {expanded === o.id_order && (
-              <div className="border-t border-[#494551] px-4 py-4 bg-[#1d1b20]">
-                <p className="text-[#494551] text-xs uppercase tracking-widest mb-3">
+              <div className="border-t border-text-muted/30 px-4 py-4 bg-bg-light">
+                <p className="text-text-muted text-xs uppercase tracking-widest mb-3">
                   // EMAIL: {o.user?.email}
                 </p>
                 <table className="w-full text-xs uppercase tracking-widest">
                   <thead>
-                    <tr className="text-[#494551] border-b border-[#494551]">
+                    <tr className="text-text-muted border-b border-text-muted/30">
                       <th className="text-left py-2 pr-4">Producto</th>
                       <th className="text-left py-2 pr-4">Precio</th>
                       <th className="text-left py-2 pr-4">Artista</th>
@@ -88,18 +88,17 @@ export default function AdminOrders() {
                   </thead>
                   <tbody>
                     {o.orderedProducts?.map((p) => (
-                      <tr key={p.id_product} className="border-b border-[#494551]/40">
-                        <td className="py-2 pr-4 text-[#e6e0e9]">{p.title}</td>
-                        <td className="py-2 pr-4 text-[#cbc4d2]">${p.OrdersProducts?.unit_price}</td>
-                        <td className="py-2 pr-4 text-[#cbc4d2]">
-                          {p.OrdersProducts?.artist_name || <span className="text-[#494551]">--</span>}
+                      <tr key={p.id_product} className="border-b border-text-muted/10">
+                        <td className="py-2 pr-4 text-text-primary">{p.title}</td>
+                        <td className="py-2 pr-4 text-text-muted">${p.OrdersProducts?.unit_price}</td>
+                        <td className="py-2 pr-4 text-text-muted">
+                          {p.OrdersProducts?.artist_name || <span className="text-text-muted/50">--</span>}
                         </td>
-                        <td className="py-2 text-[#cbc4d2]">
+                        <td className="py-2 text-text-muted">
                           {p.OrdersProducts?.music_url ? (
-                            
-                            <a href={p.OrdersProducts.music_url} target="_blank" rel="noreferrer" className="text-[#ffb4ab] hover:underline">ABRIR</a>
+                            <a href={p.OrdersProducts.music_url} target="_blank" rel="noreferrer" className="text-accent-secondary hover:underline">ABRIR</a>
                           ) : (
-                            <span className="text-[#494551]">--</span>
+                            <span className="text-text-muted/50">--</span>
                           )}
                         </td>
                       </tr>

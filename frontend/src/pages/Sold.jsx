@@ -3,52 +3,58 @@ import ProductList from "../components/ProductList";
 
 function ArtistModal({ product, onClose }) {
   if (!product) return null;
-
   const credit = product.soldCredit;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md border border-[#494551] bg-[#141218] p-8" style={{ fontFamily: "Space Grotesk" }} onClick={e => e.stopPropagation()}>
-        
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" style={{ background: "rgba(23,1,27,0.9)" }} onClick={onClose}>
+      <div className="w-full max-w-md p-8" style={{ fontFamily: "Space Grotesk", background: "var(--color-bg-light)", border: "1px solid var(--color-text-muted)" }} onClick={e => e.stopPropagation()}>
+
         <div className="flex justify-between items-start mb-6">
-          <div className="inline-block px-2 py-1 bg-[#381e72] text-[#e6e0e9] text-xs font-semibold uppercase tracking-[0.5em]">
+          <div className="inline-block px-2 py-1 text-xs font-semibold uppercase tracking-[0.5em]" style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
             ARTISTA
           </div>
-          <button onClick={onClose} className="text-[#494551] hover:text-[#ffb4ab] text-xs uppercase tracking-widest transition-colors">
+          <button onClick={onClose} className="text-xs uppercase tracking-widest transition-colors" style={{ color: "var(--color-text-muted)" }}>
             [CERRAR]
           </button>
         </div>
 
-        <h2 className="text-[28px] font-bold text-[#e6e0e9] uppercase tracking-tighter leading-none mb-2">
+        <h2 className="text-[28px] font-bold uppercase tracking-tighter leading-none mb-2" style={{ color: "var(--color-text)" }}>
           {product.title}
         </h2>
 
         {credit ? (
           <div className="space-y-4 mt-6">
             {credit.artist_name && (
-              <div className="border-l border-[#ffb4ab] pl-4">
-                <p className="text-[#cbc4d2] text-xs uppercase tracking-widest mb-1">ARTISTA</p>
-                <p className="text-[#e6e0e9] text-sm">{credit.artist_name}</p>
+              <div className="pl-4" style={{ borderLeft: "2px solid var(--color-accent)" }}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>ARTISTA</p>
+                <p className="text-sm" style={{ color: "var(--color-text)" }}>{credit.artist_name}</p>
               </div>
             )}
             {credit.artist_bio && (
-              <div className="border-l border-[#494551] pl-4">
-                <p className="text-[#cbc4d2] text-xs uppercase tracking-widest mb-1">BIO</p>
-                <p className="text-[#e6e0e9] text-sm">{credit.artist_bio}</p>
+              <div className="pl-4" style={{ borderLeft: "2px solid var(--color-text-muted)" }}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--color-text-muted)" }}>BIO</p>
+                <p className="text-sm" style={{ color: "var(--color-text)" }}>{credit.artist_bio}</p>
               </div>
             )}
             {credit.music_url && (
-              <a href={credit.music_url} target="_blank" rel="noreferrer" className="block w-full py-3 border border-[#ffb4ab] text-[#ffb4ab] text-xs uppercase tracking-widest text-center hover:bg-[#ffb4ab] hover:text-[#690005] transition-all mt-4">
+              <a
+                href={credit.music_url}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full py-3 text-xs uppercase tracking-widest text-center transition-all mt-4"
+                style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--color-accent-secondary)"; e.currentTarget.style.color = "var(--color-bg-dark)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-accent-secondary)"; }}
+              >
                 ESCUCHAR_MUSICA
               </a>
             )}
           </div>
         ) : (
-          <p className="text-[#494551] text-xs uppercase tracking-widest mt-6 border-l border-[#494551] pl-4">
+          <p className="text-xs uppercase tracking-widest mt-6 pl-4" style={{ color: "var(--color-text-muted)", borderLeft: "2px solid var(--color-text-muted)" }}>
             ARTISTA_PENDIENTE
           </p>
         )}
-
       </div>
     </div>
   );
@@ -68,16 +74,16 @@ export default function Sold() {
   };
 
   return (
-    <section className="min-h-screen bg-[#141218] px-16 py-12" style={{ fontFamily: "Space Grotesk" }}>
+    <section className="min-h-screen px-16 py-12" style={{ background: "var(--color-bg-dark)", fontFamily: "Space Grotesk" }}>
       <div className="mb-10">
-        <div className="inline-block px-2 py-1 bg-[#ffb4ab] text-[#690005] text-xs font-semibold uppercase tracking-[0.5em] mb-4">
+        <div className="inline-block px-2 py-1 text-xs font-semibold uppercase tracking-[0.5em] mb-4" style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
           ARCHIVO
         </div>
-        <h1 className="text-[40px] font-bold text-[#e6e0e9] uppercase tracking-tighter leading-none mb-2">
+        <h1 className="text-[40px] font-bold uppercase tracking-tighter leading-none mb-2" style={{ color: "var(--color-text)" }}>
           OBRAS_VENDIDAS
         </h1>
-        <p className="text-[#494551] text-xs uppercase tracking-widest border-l border-[#ffb4ab] pl-4">
-          ESTAS OBRAS YA TIENEN DUENO
+        <p className="text-xs uppercase tracking-widest pl-4" style={{ color: "var(--color-text-muted)", borderLeft: "2px solid var(--color-accent)" }}>
+          ESTAS OBRAS YA TIENEN DUEÑO
         </p>
       </div>
 
