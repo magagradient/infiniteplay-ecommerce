@@ -25,18 +25,52 @@ export default function ForgotPassword() {
     };
 
     return (
-        <section className="p-8 max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Olvidé mi contraseña</h1>
+        <section className="min-h-screen bg-bg-dark flex items-center justify-center px-4" style={{ fontFamily: "Space Grotesk" }}>
+            <div className="w-full max-w-md border border-text-muted/30 p-8">
 
-            {message && <p className="text-green-600 mb-4">{message}</p>}
-            {error && <p className="text-red-500 mb-4">{error}</p>}
+                <div className="mb-8">
+                    <div className="inline-block px-2 py-1 bg-accent text-bg-dark text-xs font-semibold uppercase tracking-[0.5em] mb-4">
+                        SEGURIDAD
+                    </div>
+                    <h1 className="text-[40px] font-bold text-text-primary uppercase tracking-tighter leading-none">
+                        RECUPERAR_ACCESO
+                    </h1>
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <input type="email" placeholder="Tu correo" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full border rounded px-3 py-2" />
-                <button type="submit" disabled={loading} className="w-full bg-pink-500 text-white py-2 rounded">
-                    {loading ? "Enviando..." : "Solicitar restablecimiento"}
-                </button>
-            </form>
+                {message && (
+                    <p className="text-accent-secondary text-xs uppercase tracking-widest mb-4 border border-accent-secondary px-4 py-2">
+                        [OK] {message}
+                    </p>
+                )}
+                {error && (
+                    <p className="text-accent text-xs uppercase tracking-widest mb-4 border border-accent px-4 py-2">
+                        [ERROR] {error}
+                    </p>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="text-text-muted text-xs uppercase tracking-widest mb-1 block">EMAIL</label>
+                        <input
+                            type="email"
+                            placeholder="usuario@dominio.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full bg-bg-light border border-text-muted/30 text-text-primary px-4 py-3 text-sm focus:outline-none focus:border-accent-secondary transition-colors"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-4 bg-accent text-bg-dark font-bold uppercase tracking-widest hover:bg-transparent hover:border hover:border-accent hover:text-accent transition-all mt-4 disabled:opacity-50"
+                    >
+                        {loading ? "[ENVIANDO...]" : "SOLICITAR_RESTABLECIMIENTO"}
+                    </button>
+                </form>
+
+            </div>
         </section>
     );
 }

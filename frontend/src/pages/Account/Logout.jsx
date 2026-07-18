@@ -22,8 +22,10 @@ export default function Logout() {
     }, [navigate]);
 
     return (
-        <section className="p-8 text-center">
-            <p>Cerrando sesión...</p>
+        <section className="min-h-screen bg-bg-dark flex items-center justify-center px-4" style={{ fontFamily: "Space Grotesk" }}>
+            <p className="text-accent-secondary text-xs uppercase tracking-widest animate-pulse">
+                [CERRANDO_SESIÓN...]
+            </p>
         </section>
     );
 }

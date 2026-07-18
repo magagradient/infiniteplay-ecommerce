@@ -43,21 +43,79 @@ export default function ChangePassword() {
     };
 
     return (
-        <section className="p-8 max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Cambiar contraseña</h1>
+        <section className="min-h-screen bg-bg-dark flex items-center justify-center px-4" style={{ fontFamily: "Space Grotesk" }}>
+            <div className="w-full max-w-md border border-text-muted/30 p-8">
 
-            {error && <p className="text-red-500 mb-4">{error}</p>}
-            {success && <p className="text-green-600 mb-4">{success}</p>}
+                <div className="mb-8">
+                    <div className="inline-block px-2 py-1 bg-accent text-bg-dark text-xs font-semibold uppercase tracking-[0.5em] mb-4">
+                        SEGURIDAD
+                    </div>
+                    <h1 className="text-[40px] font-bold text-text-primary uppercase tracking-tighter leading-none">
+                        CAMBIAR_CONTRASEÑA
+                    </h1>
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <input name="currentPassword" type="password" placeholder="Contraseña actual" value={form.currentPassword} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-                <input name="newPassword" type="password" placeholder="Nueva contraseña" value={form.newPassword} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
-                <input name="confirmPassword" type="password" placeholder="Confirmar nueva contraseña" value={form.confirmPassword} onChange={handleChange} required className="w-full border rounded px-3 py-2" />
+                {error && (
+                    <p className="text-accent text-xs uppercase tracking-widest mb-4 border border-accent px-4 py-2">
+                        [ERROR] {error}
+                    </p>
+                )}
+                {success && (
+                    <p className="text-accent-secondary text-xs uppercase tracking-widest mb-4 border border-accent-secondary px-4 py-2">
+                        [OK] {success}
+                    </p>
+                )}
 
-                <button type="submit" disabled={loading} className="w-full bg-pink-500 text-white py-2 rounded">
-                    {loading ? "Guardando..." : "Guardar nueva contraseña"}
-                </button>
-            </form>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="text-text-muted text-xs uppercase tracking-widest mb-1 block">CONTRASEÑA ACTUAL</label>
+                        <input
+                            name="currentPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            value={form.currentPassword}
+                            onChange={handleChange}
+                            required
+                            className="w-full bg-bg-light border border-text-muted/30 text-text-primary px-4 py-3 text-sm focus:outline-none focus:border-accent-secondary transition-colors"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-text-muted text-xs uppercase tracking-widest mb-1 block">NUEVA CONTRASEÑA</label>
+                        <input
+                            name="newPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            value={form.newPassword}
+                            onChange={handleChange}
+                            required
+                            className="w-full bg-bg-light border border-text-muted/30 text-text-primary px-4 py-3 text-sm focus:outline-none focus:border-accent-secondary transition-colors"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-text-muted text-xs uppercase tracking-widest mb-1 block">CONFIRMAR NUEVA CONTRASEÑA</label>
+                        <input
+                            name="confirmPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            value={form.confirmPassword}
+                            onChange={handleChange}
+                            required
+                            className="w-full bg-bg-light border border-text-muted/30 text-text-primary px-4 py-3 text-sm focus:outline-none focus:border-accent-secondary transition-colors"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-4 bg-accent text-bg-dark font-bold uppercase tracking-widest hover:bg-transparent hover:border hover:border-accent hover:text-accent transition-all mt-4 disabled:opacity-50"
+                    >
+                        {loading ? "[GUARDANDO...]" : "GUARDAR_NUEVA_CONTRASEÑA"}
+                    </button>
+                </form>
+
+            </div>
         </section>
     );
 }

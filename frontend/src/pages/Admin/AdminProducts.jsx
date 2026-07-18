@@ -90,11 +90,26 @@ export default function AdminProducts() {
     }
   };
 
-  const deleteProduct = async (id) => {
-    if (!confirm("¿Eliminar este producto?")) return;
-    const res = await fetch(`${API}/admin/products/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+  const deleteProduct = async (id, isDeleted) => {
+    const confirmMsg = isDeleted
+      ? "¿Eliminar este producto DEFINITIVAMENTE? Esta acción no se puede deshacer."
+      : "¿Eliminar este producto?";
+    if (!confirm(confirmMsg)) return;
+
+    const url = isDeleted
+      ? `${API}/admin/products/${id}/permanent`
+      : `${API}/admin/products/${id}`;
+
+    const res = await fetch(url, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
     const data = await res.json();
-    if (data.status === "success") setProducts((prev) => prev.map((p) => p.id_product === id ? { ...p, is_deleted: true } : p));
+
+    if (data.status === "success") {
+      if (isDeleted) {
+        setProducts((prev) => prev.filter((p) => p.id_product !== id));
+      } else {
+        setProducts((prev) => prev.map((p) => p.id_product === id ? { ...p, is_deleted: true } : p));
+      }
+    }
   };
 
   const startUpload = (id) => { setUploadingId(id); setEditingId(null); setImageFile(null); setImageType("cover"); setUploadSuccess(false); };
@@ -138,48 +153,53 @@ export default function AdminProducts() {
           <tbody>
             {products.map((p) => (
               <React.Fragment key={p.id_product}>
-                <tr className="border-b transition-colors" style={{ borderColor: "var(--color-text-muted)", opacity: p.is_deleted ? 0.3 : 1 }}
+                <tr className="border-b transition-colors" style={{ borderColor: "var(--color-text-muted)" }}
                   onMouseEnter={e => { if (!p.is_deleted) e.currentTarget.style.background = "var(--color-bg-light)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-                  <td className="py-3 pr-4 font-mono" style={{ color: "var(--color-text-muted)" }}>{p.id_product}</td>
-                  <td className="py-3 pr-4" style={{ color: "var(--color-text)" }}>
+                  <td className="py-3 pr-4 font-mono" style={{ color: "var(--color-text-muted)", opacity: p.is_deleted ? 0.3 : 1 }}>{p.id_product}</td>
+                  <td className="py-3 pr-4" style={{ color: "var(--color-text)", opacity: p.is_deleted ? 0.3 : 1 }}>
                     {editingId === p.id_product ? (
                       <input className="px-2 py-1 w-full outline-none" style={{ background: "var(--color-bg-dark)", border: "1px solid var(--color-accent)", color: "var(--color-text)" }} value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
                     ) : p.title}
                   </td>
-                  <td className="py-3 pr-4" style={{ color: "var(--color-text-muted)" }}>
+                  <td className="py-3 pr-4" style={{ color: "var(--color-text-muted)", opacity: p.is_deleted ? 0.3 : 1 }}>
                     {editingId === p.id_product ? (
                       <input type="number" className="px-2 py-1 w-24 outline-none" style={{ background: "var(--color-bg-dark)", border: "1px solid var(--color-accent)", color: "var(--color-text)" }} value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
                     ) : `$${p.price}`}
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3 pr-4" style={{ opacity: p.is_deleted ? 0.3 : 1 }}>
                     <span className="px-2 py-1 text-[10px]" style={{ background: p.is_sold ? "var(--color-accent)" : "transparent", color: p.is_sold ? "var(--color-text)" : "var(--color-text-muted)", border: `1px solid ${p.is_sold ? "var(--color-accent)" : "var(--color-text-muted)"}` }}>{p.is_sold ? "SÍ" : "NO"}</span>
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3 pr-4" style={{ opacity: p.is_deleted ? 0.3 : 1 }}>
                     <span className="px-2 py-1 text-[10px]" style={{ background: p.visible_in_portfolio ? "var(--color-accent-secondary)" : "transparent", color: p.visible_in_portfolio ? "var(--color-bg-dark)" : "var(--color-text-muted)", border: `1px solid ${p.visible_in_portfolio ? "var(--color-accent-secondary)" : "var(--color-text-muted)"}` }}>{p.visible_in_portfolio ? "SÍ" : "NO"}</span>
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3 pr-4" style={{ opacity: p.is_deleted ? 0.3 : 1 }}>
                     <span className="px-2 py-1 text-[10px]" style={{ background: p.is_deleted ? "var(--color-accent)" : "transparent", color: p.is_deleted ? "var(--color-text)" : "var(--color-text-muted)", border: `1px solid ${p.is_deleted ? "var(--color-accent)" : "var(--color-text-muted)"}` }}>{p.is_deleted ? "SÍ" : "NO"}</span>
                   </td>
                   <td className="py-3">
-                    {!p.is_deleted && (
-                      <div className="flex gap-2 flex-wrap">
-                        {editingId === p.id_product ? (
-                          <>
-                            <button onClick={() => saveEdit(p.id_product)} className="px-3 py-1 text-[10px] font-bold transition-colors" style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>GUARDAR</button>
-                            <button onClick={() => setEditingId(null)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>CANCELAR</button>
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => startEdit(p)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}>EDITAR</button>
-                            <button onClick={() => startUpload(p.id_product)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>+ IMG</button>
-                            <button onClick={() => deleteProduct(p.id_product)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}
-                              onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--color-accent)"; e.currentTarget.style.color = "var(--color-accent)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--color-text-muted)"; e.currentTarget.style.color = "var(--color-text-muted)"; }}>✕</button>
-                          </>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex gap-2 flex-wrap">
+                      {!p.is_deleted && (
+                        <>
+                          {editingId === p.id_product ? (
+                            <>
+                              <button onClick={() => saveEdit(p.id_product)} className="px-3 py-1 text-[10px] font-bold transition-colors" style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>GUARDAR</button>
+                              <button onClick={() => setEditingId(null)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>CANCELAR</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => startEdit(p)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}>EDITAR</button>
+                              <button onClick={() => startUpload(p.id_product)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>+ IMG</button>
+                            </>
+                          )}
+                        </>
+                      )}
+
+                      {editingId !== p.id_product && (
+                        <button onClick={() => deleteProduct(p.id_product, p.is_deleted)} className="px-3 py-1 text-[10px] transition-colors" style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--color-accent)"; e.currentTarget.style.color = "var(--color-accent)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--color-text-muted)"; e.currentTarget.style.color = "var(--color-text-muted)"; }}>✕</button>
+                      )}
+                    </div>
                   </td>
                 </tr>
 
