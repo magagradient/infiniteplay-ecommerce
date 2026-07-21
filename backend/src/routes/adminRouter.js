@@ -9,6 +9,8 @@ const deleteProduct = require("../controllers/admin/products/deleteProduct");
 const permanentDeleteProduct = require("../controllers/admin/products/permanentDeleteProduct");
 const getOrders = require("../controllers/admin/orders/getOrders");
 const getUsers = require("../controllers/admin/users/getUsers");
+const getPendingCustomizations = require("../controllers/admin/customizations/getPendingCustomizations");
+const completeCustomization = require("../controllers/admin/customizations/completeCustomization");
 
 // todas las rutas de admin requieren rol 'admin'
 router.get("/products", authMiddleware(["admin"]), getProducts);
@@ -17,5 +19,7 @@ router.delete("/products/:id", authMiddleware(["admin"]), deleteProduct);
 router.delete("/products/:id/permanent", authMiddleware(["admin"]), permanentDeleteProduct);
 router.get("/orders", authMiddleware(["admin"]), getOrders);
 router.get("/users", authMiddleware(["admin"]), getUsers);
+router.get("/customizations/pending", authMiddleware(["admin"]), getPendingCustomizations);
+router.patch("/customizations/:id_order/:id_product/complete", authMiddleware(["admin"]), completeCustomization);
 
 module.exports = router;

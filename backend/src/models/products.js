@@ -43,6 +43,19 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true
     },
+    is_customizable: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    customization_fields: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: null
+      // Ej: ["title", "artist", "date", "location"]
+      // Si is_customizable es true pero este campo está vacío,
+      // el checkout puede asumir un default (ej: ["title", "artist"])
+    },
     id_category: {
       type: DataTypes.INTEGER,
       allowNull: true,

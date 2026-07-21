@@ -6,11 +6,14 @@ const create = async (req, res) => {
         const {
             title,
             description,
+            description_long,
             price,
             is_sold,
             sold_at,
             id_category,
-            id_series
+            id_series,
+            is_customizable,
+            customization_fields
         } = req.body;
 
         if (!title || price === undefined || id_category === undefined) {
@@ -31,15 +34,34 @@ const create = async (req, res) => {
             }
         }
 
+        // Validar que, si es personalizable, customization_fields sea un array válido
+        if (is_customizable && customization_fields !== undefined && customization_fields !== null) {
+            const validFields = ["title", "artist", "date", "location"];
+            const isValidArray = Array.isArray(customization_fields) &&
+                customization_fields.every((f) => validFields.includes(f));
+            if (!isValidArray) {
+                return errorResponse(
+                    res,
+                    "bad_request",
+                    `customization_fields debe ser un array con valores válidos: ${validFields.join(", ")}.`,
+                    "products/create",
+                    400
+                );
+            }
+        }
+
         // Crear producto si todo ok
         const newProduct = await Products.create({
             title,
             description,
+            description_long,
             price,
             is_sold: is_sold ?? false,
             sold_at,
             id_category,
-            id_series: id_series ?? null
+            id_series: id_series ?? null,
+            is_customizable: is_customizable ?? false,
+            customization_fields: is_customizable ? (customization_fields ?? null) : null
         });
 
         const createdProduct = await Products.findByPk(newProduct.id_product, {

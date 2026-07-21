@@ -58,6 +58,7 @@ import AdminColors from "./pages/Admin/AdminColors";
 import AdminKeywords from "./pages/Admin/AdminKeywords";
 import AdminSeries from "./pages/Admin/AdminSeries";
 import AdminCategories from "./pages/Admin/AdminCategories";
+import AdminCustomizations from "./pages/Admin/AdminCustomizations";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -173,6 +174,7 @@ function App() {
                       <Route path="keywords" element={<AdminKeywords />} />
                       <Route path="series" element={<AdminSeries />} />
                       <Route path="categories" element={<AdminCategories />} />
+                      <Route path="customizations" element={<AdminCustomizations />} />
                     </Route>
 
                     {/* 404 */}

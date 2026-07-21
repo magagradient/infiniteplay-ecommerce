@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sent, setSent] = useState(false);
@@ -9,7 +11,7 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3000/api/contact", {
+      const res = await fetch(`${API}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -33,8 +35,8 @@ export default function Contact() {
   };
 
   return (
-    <section className="min-h-screen px-16 py-12" style={{ background: "var(--color-bg-dark)", fontFamily: "Space Grotesk" }}>
-      <div className="max-w-xl">
+    <section className="min-h-screen px-16 py-12 flex justify-center" style={{ background: "var(--color-bg-dark)", fontFamily: "Space Grotesk" }}>
+      <div className="max-w-xl w-full">
 
         <div className="mb-10">
           <div className="inline-block px-2 py-1 text-xs font-semibold uppercase tracking-[0.5em] mb-4" style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
@@ -63,7 +65,7 @@ export default function Contact() {
                 onChange={handleChange}
                 required
                 style={inputStyle}
-                onFocus={e => e.target.style.borderColor = "var(--color-accent)"}
+                onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"}
                 onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"}
               />
             </div>
@@ -78,7 +80,7 @@ export default function Contact() {
                 onChange={handleChange}
                 required
                 style={inputStyle}
-                onFocus={e => e.target.style.borderColor = "var(--color-accent)"}
+                onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"}
                 onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"}
               />
             </div>
@@ -93,14 +95,14 @@ export default function Contact() {
                 required
                 rows={5}
                 style={{ ...inputStyle, resize: "none" }}
-                onFocus={e => e.target.style.borderColor = "var(--color-accent)"}
+                onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"}
                 onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"}
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-4 font-bold uppercase tracking-widest transition-all mt-4"
+              className="w-full py-4 px-8 font-bold uppercase tracking-widest transition-all mt-4"
               style={{ background: "var(--color-accent)", color: "var(--color-text)", border: "1px solid var(--color-accent)" }}
               onMouseEnter={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-accent)"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "var(--color-accent)"; e.currentTarget.style.color = "var(--color-text)"; }}

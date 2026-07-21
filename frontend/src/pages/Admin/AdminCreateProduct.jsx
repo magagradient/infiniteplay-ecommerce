@@ -36,9 +36,9 @@ const selectStyles = {
     cursor: "pointer",
   }),
   singleValue: (base) => ({ ...base, color: "var(--color-text)", fontSize: "12px", textTransform: "uppercase" }),
-  multiValue: (base) => ({ ...base, background: "var(--color-accent)", borderRadius: 0 }),
-  multiValueLabel: (base) => ({ ...base, color: "var(--color-text)", fontSize: "11px", textTransform: "uppercase" }),
-  multiValueRemove: (base) => ({ ...base, color: "var(--color-text)", "&:hover": { background: "var(--color-accent-hover)", color: "var(--color-text)" } }),
+  multiValue: (base) => ({ ...base, background: "var(--color-accent-secondary)", borderRadius: 0 }),
+  multiValueLabel: (base) => ({ ...base, color: "var(--color-bg-dark)", fontSize: "11px", textTransform: "uppercase" }),
+  multiValueRemove: (base) => ({ ...base, color: "var(--color-bg-dark)", "&:hover": { background: "var(--color-accent-hover)", color: "var(--color-text)" } }),
   placeholder: (base) => ({ ...base, color: "var(--color-text-muted)", fontSize: "12px", textTransform: "uppercase" }),
   input: (base) => ({ ...base, color: "var(--color-text)", fontSize: "12px" }),
   indicatorSeparator: () => ({ display: "none" }),
@@ -46,15 +46,12 @@ const selectStyles = {
   clearIndicator: (base) => ({ ...base, color: "var(--color-text-muted)", "&:hover": { color: "var(--color-accent-secondary)" } }),
 };
 
-const inputStyle = {
-  width: "100%",
-  background: "var(--color-bg-light)",
-  border: "1px solid var(--color-text-muted)",
-  color: "var(--color-text)",
-  padding: "8px 12px",
-  fontSize: "14px",
-  outline: "none",
-};
+const CUSTOMIZATION_OPTIONS = [
+  { value: "title", label: "Título" },
+  { value: "artist", label: "Nombre de artista" },
+  { value: "date", label: "Fecha y hora del evento" },
+  { value: "location", label: "Lugar del evento" },
+];
 
 export default function AdminCreateProduct() {
   const { token } = useContext(AuthContext);
@@ -81,6 +78,9 @@ export default function AdminCreateProduct() {
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  const [isCustomizable, setIsCustomizable] = useState(false);
+  const [customizationFields, setCustomizationFields] = useState([]);
 
   useEffect(() => {
     fetch(`${API}/categories`).then(r => r.json()).then(d => setCategories(d.data || []));
@@ -119,6 +119,8 @@ export default function AdminCreateProduct() {
           price: parseFloat(form.price),
           id_category: parseInt(form.id_category),
           id_series: form.id_series ? parseInt(form.id_series) : null,
+          is_customizable: isCustomizable,
+          customization_fields: isCustomizable ? customizationFields.map(f => f.value) : null,
         }),
       });
       const data = await res.json();
@@ -146,6 +148,15 @@ export default function AdminCreateProduct() {
   };
 
   const labelStyle = { color: "var(--color-text-muted)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: "4px" };
+  const inputStyle = {
+    width: "100%",
+    background: "var(--color-bg-light)",
+    border: "1px solid var(--color-text-muted)",
+    color: "var(--color-text)",
+    padding: "8px 12px",
+    fontSize: "14px",
+    outline: "none",
+  };
 
   return (
     <div style={{ fontFamily: "Space Grotesk" }}>
@@ -202,6 +213,42 @@ export default function AdminCreateProduct() {
         <div>
           <label style={labelStyle}>Keywords</label>
           <Select isMulti options={keywordsList.map(k => ({ value: k.id_keyword, label: k.name }))} onChange={setSelectedKeywords} value={selectedKeywords} placeholder="-- Seleccionar keywords --" styles={selectStyles} />
+        </div>
+
+        {/* --- Personalización --- */}
+        <div className="pt-2" style={{ borderTop: "1px solid var(--color-text-muted)" }}>
+          <label className="flex items-center gap-2 cursor-pointer mb-4 mt-4">
+            <input
+              type="checkbox"
+              checked={isCustomizable}
+              onChange={(e) => {
+                setIsCustomizable(e.target.checked);
+                if (!e.target.checked) setCustomizationFields([]);
+              }}
+              className="w-4 h-4"
+              style={{ accentColor: "var(--color-accent-secondary)" }}
+            />
+            <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text)" }}>
+              Producto personalizado a pedido (no es descarga inmediata)
+            </span>
+          </label>
+
+          {isCustomizable && (
+            <div>
+              <label style={labelStyle}>Datos a pedirle al comprador</label>
+              <Select
+                isMulti
+                options={CUSTOMIZATION_OPTIONS}
+                value={customizationFields}
+                onChange={setCustomizationFields}
+                placeholder="-- Seleccionar campos --"
+                styles={selectStyles}
+              />
+              <p className="text-[10px] uppercase tracking-widest mt-2" style={{ color: "var(--color-accent-secondary)" }}>
+                Si no seleccionás nada, se pedirá título y artista por defecto.
+              </p>
+            </div>
+          )}
         </div>
 
         <div>
