@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { changePassword } from "../../services/api"; // implementá changePassword({ token, currentPassword, newPassword })
+import { getPasswordError, passwordsMatch } from "../../utils/validators";
 
 export default function ChangePassword() {
     const navigate = useNavigate();
@@ -22,7 +23,18 @@ export default function ChangePassword() {
         setError("");
         setSuccess("");
 
-        if (form.newPassword !== form.confirmPassword) {
+        if (!form.currentPassword) {
+            setError("Ingresá tu contraseña actual.");
+            return;
+        }
+
+        const passwordError = getPasswordError(form.newPassword);
+        if (passwordError) {
+            setError(passwordError);
+            return;
+        }
+
+        if (!passwordsMatch(form.newPassword, form.confirmPassword)) {
             setError("Las contraseñas nuevas no coinciden.");
             return;
         }
@@ -91,6 +103,9 @@ export default function ChangePassword() {
                             required
                             className="w-full bg-bg-light border border-text-muted/30 text-text-primary px-4 py-3 text-sm focus:outline-none focus:border-accent-secondary transition-colors"
                         />
+                        <p className="text-text-muted/70 text-[10px] uppercase tracking-widest mt-1">
+                            Mínimo 8 caracteres, con al menos una letra y un número.
+                        </p>
                     </div>
 
                     <div>

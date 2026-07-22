@@ -1,6 +1,8 @@
 import { useState } from "react";
 import ProductList from "../components/ProductList";
 
+const API = import.meta.env.VITE_API_URL;
+
 function ArtistModal({ product, onClose }) {
   if (!product) return null;
   const credit = product.soldCredit;
@@ -65,7 +67,7 @@ export default function Sold() {
 
   const handleCardClick = async (product) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/products/${product.id_product}/sold-credit`);
+      const res = await fetch(`${API}/products/${product.id_product}/sold-credit`);
       const data = await res.json();
       setSelectedProduct({ ...product, soldCredit: data.data });
     } catch (error) {

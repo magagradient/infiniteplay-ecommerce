@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,7 +10,7 @@ export default function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/products?limit=6");
+        const res = await fetch(`${API}/products?limit=6`);
         const data = await res.json();
         if (res.ok) setProducts(data.data);
         console.log(data);
