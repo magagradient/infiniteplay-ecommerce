@@ -30,6 +30,15 @@ const webhookMercadoPago = async (req, res) => {
         if (order) {
             order.status = "paid";
             await order.save();
+        
+            // actualizar acceso al studio — 15 días desde ahora
+            const user = await Users.findByPk(order.id_user);
+            if (user) {
+                const expires = new Date();
+                expires.setDate(expires.getDate() + 15);
+                user.studio_expires_at = expires;
+                await user.save();
+            }
         }
 
         const orderProducts = await OrdersProducts.findAll({ where: { id_order } });

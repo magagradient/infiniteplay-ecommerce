@@ -40,7 +40,12 @@ module.exports = (sequelize) => {
             type: DataTypes.ENUM('user', 'admin'),
             allowNull: false,
             defaultValue: 'user', 
-        }
+        },
+        studio_expires_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          defaultValue: null,
+      },
     }, {
         tableName: 'users',
         timestamps: false, 

@@ -18,6 +18,7 @@ const status = require("../controllers/users/get/status");
 const show = require("../controllers/users/get/show");
 const passwordChangesIndex = require("../controllers/passwordChanges/get/index");
 const getProfile = require("../controllers/users/get/profile");
+const studioAccess = require("../controllers/users/get/studioAccess");
 
 // post
 const create = require("../controllers/users/post/create");
@@ -39,14 +40,17 @@ const destroy = require("../controllers/users/delete/destroy");
 router.get("/", auth(), validateSchema(usersPaginationSchema, "query"), index);
 router.get("/status", auth(), status);
 router.get("/profile", auth(), getProfile);
+router.get("/studio-access", auth(), studioAccess);
 router.get("/:id", auth(), validateSchema(idParamSchema, "params"), show);
 router.get("/:id/password-changes", auth(), validateSchema(idParamSchema, "params"), passwordChangesIndex);
+
 
 // post (públicas)
 router.post("/login", loginLimiter, validateSchema(loginSchema, "body"), login);
 router.post("/", registerLimiter, validateSchema(registerSchema, "body"), create);
 router.post("/refresh", refresh);
 router.post("/logout", logout);
+
 
 // put (protegida)
 router.put("/:id", auth(), validateSchema(idParamSchema, "params"), validateSchema(updateUserSchema, "body"), update);

@@ -50,6 +50,7 @@ export default function Navbar() {
         {renderLink("/sold", "Sold")}
         {renderLink("/about", "About")}
         {renderLink("/contact", "Contact")}
+        {renderLink("/lab", "Lab")}
 
         {user?.role === "admin" && (
           <NavLink
