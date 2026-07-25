@@ -53,6 +53,8 @@ const CUSTOMIZATION_OPTIONS = [
   { value: "location", label: "Lugar del evento" },
 ];
 
+const DEFAULT_DESCRIPTION_LONG = "Obra digital exclusiva, creada a partir de un proceso de diseño experimental. Pensada para lanzamientos musicales, aporta una identidad visual propia y distintiva.";
+
 export default function AdminCreateProduct() {
   const { token } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -68,7 +70,7 @@ export default function AdminCreateProduct() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    description_long: "",
+    description_long: DEFAULT_DESCRIPTION_LONG,
     price: "",
     id_category: "",
     id_series: "",
@@ -184,7 +186,21 @@ export default function AdminCreateProduct() {
         </div>
 
         <div>
-          <label style={labelStyle}>Descripción larga</label>
+          <div className="flex items-center justify-between mb-1">
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Descripción larga</label>
+            {form.description_long && (
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, description_long: "" })}
+                className="text-[10px] uppercase tracking-widest transition-colors"
+                style={{ color: "var(--color-text-muted)" }}
+                onMouseEnter={e => e.currentTarget.style.color = "var(--color-accent)"}
+                onMouseLeave={e => e.currentTarget.style.color = "var(--color-text-muted)"}
+              >
+                ✕ Borrar y escribir la mía
+              </button>
+            )}
+          </div>
           <textarea name="description_long" value={form.description_long} onChange={handleChange} rows={5} placeholder="Descripción detallada..."
             style={{ ...inputStyle, resize: "none" }} onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"} onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"} />
         </div>

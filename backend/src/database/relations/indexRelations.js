@@ -7,6 +7,9 @@ const favoriteSeriesRelations = require("./favoriteSeries_relations");
 const favoriteProductsRelations = require("./favoriteProducts_relations");
 const keywordsRelations = require("./keywords_relations");
 const shoppingRelations = require("./shopping_relations");
+const studioRelations = require("./studio_relations");
+const productTechnicalDetailsRelations = require("./productTechnicalDetails_relations");
+const productIncludedResourcesRelations = require("./productIncludedResources_relations");
 
 module.exports = (models) => {
     ecommerceRelations(models);
@@ -18,4 +21,7 @@ module.exports = (models) => {
     favoriteProductsRelations(models);
     keywordsRelations(models);
     shoppingRelations(models);
+    studioRelations(models);
+    productTechnicalDetailsRelations(models);
+    productIncludedResourcesRelations(models);
 };

@@ -6,7 +6,9 @@ const {
   Styles,
   Colors,
   Themes,
-  ProductImages
+  ProductImages,
+  ProductTechnicalDetails,
+  ProductIncludedResources
 } = require("../../../database/indexModels");
 
 const { successResponse, errorResponse } = require("../../../utils/responseHelper");
@@ -32,7 +34,26 @@ const show = async (req, res) => {
               { model: Keywords, as: "keywords", through: { attributes: [] } },
               { model: Styles, as: "styles", through: { attributes: [] } },
               { model: Colors, as: "colors", through: { attributes: [] } },
-              { model: Themes, as: "themes", through: { attributes: [] } }
+              { model: Themes, as: "themes", through: { attributes: [] } },
+
+              {
+                  model: ProductTechnicalDetails,
+                  as: "technicalDetails",
+                  where: { is_visible: true },
+                  required: false,
+                  separate: true,
+                  order: [["sort_order", "ASC"]]
+              },
+
+              {
+                  model: ProductIncludedResources,
+                  as: "includedResources",
+                  required: false,
+                  separate: true,
+                  include: [
+                      { model: Categories, as: "category", attributes: ["id_category", "name"] }
+                  ]
+              }
           ]
       });
 

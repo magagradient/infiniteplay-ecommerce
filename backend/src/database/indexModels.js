@@ -16,6 +16,8 @@ const ProductImagesModel = require("../models/product_images");
 const ProductKeywordsModel = require("../models/product_keywords");
 const ProductStylesModel = require("../models/product_styles");
 const ProductThemesModel = require("../models/product_themes");
+const ProductTechnicalDetailsModel = require("../models/product_technical_details");
+const ProductIncludedResourcesModel = require("../models/product_included_resources");
 
 // Atributos :
 const ColorsModel = require("../models/colors");
@@ -48,6 +50,10 @@ const InvoicesModel = require("../models/invoices");
 const CouponsModel = require("../models/coupons");
 const DownloadLinksModel = require("../models/download_links");
 
+// Studio
+const StudioCategoriesModel = require("../models/studio_categories");
+const StudioResourcesModel = require("../models/studio_resources");
+
 
 // instanciar modelos:
 
@@ -74,6 +80,8 @@ const models = {
   ProductKeywords: ProductKeywordsModel(sequelize, DataTypes),
   ProductStyles: ProductStylesModel(sequelize, DataTypes),
   ProductThemes: ProductThemesModel(sequelize, DataTypes),
+  ProductTechnicalDetails: ProductTechnicalDetailsModel(sequelize, DataTypes),
+  ProductIncludedResources: ProductIncludedResourcesModel(sequelize, DataTypes),
   Products: ProductsModel(sequelize, DataTypes),
   Series: SeriesModel(sequelize, DataTypes),
   ShoppingCarts: ShoppingCartsModel(sequelize, DataTypes),
@@ -82,6 +90,8 @@ const models = {
   UserCoupons: UserCouponsModel(sequelize, DataTypes),
   Users: UsersModel(sequelize, DataTypes),
   RefreshTokens: RefreshTokensModel(sequelize, DataTypes),
+  StudioCategories: StudioCategoriesModel(sequelize, DataTypes),
+  StudioResources: StudioResourcesModel(sequelize, DataTypes)
 };
 
 // relaciones: 

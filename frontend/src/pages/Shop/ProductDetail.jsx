@@ -6,6 +6,26 @@ import RelatedProducts from "../../components/RelatedProducts";
 
 const API = import.meta.env.VITE_API_URL;
 
+const USAGE_LICENSE = {
+  allowed: [
+    "Lanzamientos musicales (streaming, singles, álbumes)",
+    "Redes sociales",
+    "Marketing y promoción",
+    "Merchandising / branding de tu marca como artista",
+  ],
+  notAllowed: [
+    "Revender el diseño, tal cual o modificado",
+    "Redistribuir los archivos originales",
+    "Reclamar la autoría del diseño",
+    "Usarlo para crear o vincularlo a NFTs",
+  ],
+};
+
+const INCLUDED_FILES = [
+  "Sin marca de agua",
+  "Listo para Spotify, Apple Music, YouTube Music y demás plataformas",
+];
+
 export default function ProductDetail() {
   const { id } = useParams();
   const { addToCart } = useCart();
@@ -71,6 +91,19 @@ export default function ProductDetail() {
             </div>
           )}
 
+          {/* Leyenda de la preview */}
+          <ul className="space-y-1">
+            <li className="text-text-muted text-xs flex items-start gap-2">
+              <span className="text-accent-secondary">•</span> Click en la imagen para hacer zoom
+            </li>
+            <li className="text-text-muted text-xs flex items-start gap-2">
+              <span className="text-accent-secondary">•</span> Vista previa con marca de agua
+            </li>
+            <li className="text-text-muted text-xs flex items-start gap-2">
+              <span className="text-accent-secondary">•</span> El archivo en alta resolución se entrega tras la compra
+            </li>
+          </ul>
+
         </div>
 
         {/* Info */}
@@ -91,6 +124,23 @@ export default function ProductDetail() {
               </p>
             )}
           </div>
+
+          {/* Included Resources: qué trae el combo */}
+          {product.includedResources?.length > 0 && (
+            <div className="border-t border-text-muted/30 pt-4">
+              <p className="text-accent-secondary text-xs uppercase tracking-widest mb-3">
+                // RECURSOS_INCLUIDOS
+              </p>
+              <ul className="space-y-1.5">
+                {product.includedResources.map((res) => (
+                  <li key={res.id_resource} className="text-text-muted text-sm flex items-center gap-2">
+                    <span className="text-accent-secondary">✔</span>
+                    {res.category?.name} <span className="text-text-primary">× {res.quantity}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="border-t border-text-muted/30 pt-4">
             <p className="text-accent text-2xl font-bold">{formatPrice(product.price)}</p>
@@ -117,6 +167,76 @@ export default function ProductDetail() {
               SERIE: {product.series.title}
             </p>
           )}
+
+          {/* Datos técnicos (antes "Ficha técnica") */}
+          {product.technicalDetails?.length > 0 && (
+            <div className="border-t border-text-muted/30 pt-4">
+              <p className="text-accent-secondary text-xs uppercase tracking-widest mb-3">
+                // DATOS_TÉCNICOS
+              </p>
+              <div className="space-y-2">
+                {product.technicalDetails.map((detail) => (
+                  <div key={detail.id_detail} className="flex justify-between items-center text-sm border-b border-text-muted/10 pb-2">
+                    <span className="text-text-muted uppercase text-xs tracking-widest">{detail.label}</span>
+                    <span className="text-text-primary">{detail.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Archivos incluidos */}
+          <div className="border-t border-text-muted/30 pt-4">
+            <p className="text-accent-secondary text-xs uppercase tracking-widest mb-3">
+              // ARCHIVOS_INCLUIDOS
+            </p>
+            <ul className="space-y-1.5">
+              {INCLUDED_FILES.map((item, i) => (
+                <li key={i} className="text-text-muted text-sm flex items-start gap-2">
+                  <span className="text-accent-secondary">✔</span> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Protocolo de uso (Licencia) */}
+          <div className="border-t border-text-muted/30 pt-4">
+            <p className="text-accent-secondary text-xs uppercase tracking-widest mb-3">
+              // PROTOCOLO_DE_USO
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-accent-secondary text-[11px] uppercase tracking-widest mb-2">Permitido</p>
+                <ul className="space-y-1.5">
+                  {USAGE_LICENSE.allowed.map((item, i) => (
+                    <li key={i} className="text-text-muted text-xs flex items-start gap-2">
+                      <span className="text-accent-secondary">✔</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-accent text-[11px] uppercase tracking-widest mb-2">No permitido</p>
+                <ul className="space-y-1.5">
+                  {USAGE_LICENSE.notAllowed.map((item, i) => (
+                    <li key={i} className="text-text-muted text-xs flex items-start gap-2">
+                      <span className="text-accent">✕</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Propiedad exclusiva */}
+          <div className="border-t border-text-muted/30 pt-4">
+            <p className="text-accent-secondary text-xs uppercase tracking-widest mb-2">
+              // PROPIEDAD_EXCLUSIVA
+            </p>
+            <p className="text-text-muted text-sm">
+              Esta obra se vende una sola vez. Tras la compra, se retira permanentemente del catálogo y pasa al archivo histórico de Infinite Play — ningún otro artista podrá adquirirla.
+            </p>
+          </div>
 
           {/* Botón */}
           <button

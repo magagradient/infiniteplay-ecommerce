@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Link } from "react-router-dom";
+import StudioEditor from "../components/StudioEditor";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -48,30 +49,30 @@ export default function Lab() {
           </Link>
         </div>
       ) : !access?.hasAccess ? (
-        <div className="max-w-md border p-8" style={{ borderColor: "var(--color-text-muted)" }}>
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--color-text-muted)" }}>
-            // ACCESO_BLOQUEADO
-          </p>
-          <p className="text-sm mb-6" style={{ color: "var(--color-text)" }}>
-            El studio está disponible durante 15 días después de cada compra. Comprá una obra para activar tu acceso.
-          </p>
-          <Link to="/products"
-            className="block w-full py-3 text-center text-xs font-bold uppercase tracking-widest transition-all"
-            style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
-            VER_CATÁLOGO
-          </Link>
+        <div>
+          <div className="max-w-md border p-6 mb-8" style={{ borderColor: "var(--color-accent)", background: "var(--color-bg-light)" }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--color-accent)" }}>
+        // MODO_DEMO — DESCARGA BLOQUEADA
+            </p>
+            <p className="text-sm mb-4" style={{ color: "var(--color-text-muted)" }}>
+              Podés probar el editor libremente. Para descargar tu creación, comprá una obra.
+            </p>
+            <Link to="/products"
+              className="inline-block px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all"
+              style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
+              VER_CATÁLOGO
+            </Link>
+          </div>
+          <StudioEditor hasAccess={false} />
         </div>
       ) : (
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs uppercase tracking-widest" style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}>
             ✓ ACCESO_ACTIVO — EXPIRA {new Date(access.expiresAt).toLocaleDateString("es-AR")}
           </div>
-          <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
-            [EDITOR_EN_CONSTRUCCIÓN — PRÓXIMAMENTE]
-          </p>
+          <StudioEditor hasAccess={true} />
         </div>
       )}
-
     </section>
   );
 }
