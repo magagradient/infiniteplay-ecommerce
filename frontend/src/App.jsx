@@ -59,6 +59,7 @@ import AdminKeywords from "./pages/Admin/AdminKeywords";
 import AdminSeries from "./pages/Admin/AdminSeries";
 import AdminCategories from "./pages/Admin/AdminCategories";
 import AdminCustomizations from "./pages/Admin/AdminCustomizations";
+import AdminStudio from "./pages/Admin/AdminStudio";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -175,6 +176,7 @@ function App() {
                       <Route path="series" element={<AdminSeries />} />
                       <Route path="categories" element={<AdminCategories />} />
                       <Route path="customizations" element={<AdminCustomizations />} />
+                      <Route path="studio" element={<AdminStudio />} />
                     </Route>
 
                     {/* 404 */}

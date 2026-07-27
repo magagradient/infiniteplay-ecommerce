@@ -31,6 +31,7 @@ export default function AdminLayout() {
             { to: "/admin/keywords", label: "// KEYWORDS" },
             { to: "/admin/series", label: "// SERIES" },
             { to: "/admin/categories", label: "// CATEGORÍAS" },
+            { to: "/admin/studio", label: "// STUDIO" },
           ].map(({ to, label }) => (
             <NavLink
               key={to}

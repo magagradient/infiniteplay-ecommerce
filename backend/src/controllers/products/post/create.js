@@ -3,18 +3,19 @@ const { successResponse, errorResponse } = require("../../../utils/responseHelpe
 
 const create = async (req, res) => {
     try {
-        const {
-            title,
-            description,
-            description_long,
-            price,
-            is_sold,
-            sold_at,
-            id_category,
-            id_series,
-            is_customizable,
-            customization_fields
-        } = req.body;
+      const {
+        title,
+        description,
+        description_long,
+        price,
+        artwork_level,
+        is_sold,
+        sold_at,
+        id_category,
+        id_series,
+        is_customizable,
+        customization_fields
+    } = req.body;
 
         if (!title || price === undefined || id_category === undefined) {
             return errorResponse(res, "bad_request", "Faltan campos obligatorios: title, price e id_category.", "products/create", 400);
@@ -50,12 +51,14 @@ const create = async (req, res) => {
             }
         }
 
+
         // Crear producto si todo ok
         const newProduct = await Products.create({
             title,
             description,
             description_long,
             price,
+            artwork_level: artwork_level ?? "experimental",
             is_sold: is_sold ?? false,
             sold_at,
             id_category,
@@ -63,6 +66,7 @@ const create = async (req, res) => {
             is_customizable: is_customizable ?? false,
             customization_fields: is_customizable ? (customization_fields ?? null) : null
         });
+
 
         const createdProduct = await Products.findByPk(newProduct.id_product, {
             include: [

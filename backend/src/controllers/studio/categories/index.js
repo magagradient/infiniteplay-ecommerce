@@ -1,3 +1,4 @@
+// controllers/studio/categories/index.js
 const { StudioCategories, StudioResources } = require("../../../database/indexModels");
 const { successResponse, errorResponse } = require("../../../utils/responseHelper");
 

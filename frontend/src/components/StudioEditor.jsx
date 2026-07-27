@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Line } from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Line, Transformer } from "react-konva";
 import useImage from "use-image";
+
+const API = import.meta.env.VITE_API_URL;
 
 const FORMATS = {
   cover: { label: "COVER ART", width: 500, height: 500, exportWidth: 3000, exportHeight: 3000 },
@@ -62,7 +64,13 @@ function UploadedImage({ src, width, height }) {
   return image ? <KonvaImage image={image} width={width} height={height} /> : null;
 }
 
-export default function StudioEditor({ hasAccess }) {
+// NUEVO — renderiza un recurso del studio (sticker/forma) traído de la API
+function ResourceImage({ src, ...props }) {
+  const [image] = useImage(src, "anonymous");
+  return image ? <KonvaImage {...props} image={image} /> : null;
+}
+
+export default function StudioEditor({ hasAccess, token }) {
   const [format, setFormat] = useState("cover");
   const [fields, setFields] = useState({ artist: "", album: "", year: "", extra: "" });
   const [imageUrl, setImageUrl] = useState(null);
@@ -70,6 +78,42 @@ export default function StudioEditor({ hasAccess }) {
   const [selectedId, setSelectedId] = useState(null);
   const stageRef = useRef(null);
   const fmt = FORMATS[format];
+
+  const transformerRef = useRef(null);
+  const layerRef = useRef(null);
+
+  useEffect(() => {
+    if (!transformerRef.current || !layerRef.current) return;
+    const stage = stageRef.current;
+    const selectedNode = selectedId ? stage.findOne(`#${selectedId}`) : null;
+
+    if (selectedNode) {
+      transformerRef.current.nodes([selectedNode]);
+    } else {
+      transformerRef.current.nodes([]);
+    }
+    transformerRef.current.getLayer().batchDraw();
+  }, [selectedId, elements]);
+
+  // NUEVO — recursos del studio traídos de la API
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [loadingResources, setLoadingResources] = useState(true);
+  const [resourcesError, setResourcesError] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API}/studio/categories`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => {
+        const cats = data.data || [];
+        setCategories(cats);
+        if (cats.length > 0) setActiveCategory(cats[0].id_studio_category);
+      })
+      .catch(() => setResourcesError("No se pudieron cargar los recursos"))
+      .finally(() => setLoadingResources(false));
+  }, [token]);
 
   const handleImage = (e) => {
     const file = e.target.files[0];
@@ -80,6 +124,25 @@ export default function StudioEditor({ hasAccess }) {
   const generate = useCallback(() => {
     setElements(generateElements(fields, fmt.width, fmt.height));
   }, [fields, fmt]);
+
+  // NUEVO — agrega un recurso (sticker/forma) al canvas como elemento independiente
+  const addResourceToCanvas = (resource) => {
+    const size = 80;
+    setElements(prev => [
+      ...prev,
+      {
+        id: `resource-${resource.id_studio_resource}-${Date.now()}`,
+        type: "resource",
+        src: resource.url,
+        x: fmt.width / 2 - size / 2,
+        y: fmt.height / 2 - size / 2,
+        width: size,
+        height: size,
+        rotation: 0,
+        opacity: 1,
+      },
+    ]);
+  };
 
   const moveElement = (id, direction) => {
     setElements(prev => {
@@ -93,15 +156,48 @@ export default function StudioEditor({ hasAccess }) {
     });
   };
 
+  const removeElement = (id) => {
+    setElements(prev => prev.filter(el => el.id !== id));
+    setSelectedId(null);
+  };
+
+  const sendToEdge = (id, edge) => {
+    setElements(prev => {
+      const idx = prev.findIndex(el => el.id === id);
+      if (idx === -1) return prev;
+      const newArr = [...prev];
+      const [el] = newArr.splice(idx, 1);
+      if (edge === "front") newArr.push(el);
+      else newArr.unshift(el);
+      return newArr;
+    });
+  };
+
   const handleDownload = () => {
-    if (!stageRef.current) return;
+    if (!stageRef.current || !transformerRef.current) return;
+  
+    // Ocultar el Transformer antes de exportar
+    transformerRef.current.nodes([]);
+    transformerRef.current.getLayer().batchDraw();
+  
     const scale = fmt.exportWidth / fmt.width;
     const uri = stageRef.current.toDataURL({ pixelRatio: scale });
     const a = document.createElement("a");
     a.href = uri;
     a.download = `infinite-play-${format}.png`;
     a.click();
+  
+    // Restaurar el Transformer si seguía habiendo algo seleccionado
+    if (selectedId) {
+      const node = stageRef.current.findOne(`#${selectedId}`);
+      if (node) {
+        transformerRef.current.nodes([node]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    }
   };
+  
+  const activeResources = categories.find(c => c.id_studio_category === activeCategory)?.resources || [];
 
   return (
     <div style={{ fontFamily: "Space Grotesk" }}>
@@ -160,6 +256,61 @@ export default function StudioEditor({ hasAccess }) {
             ))}
           </div>
 
+          {/* NUEVO — Recursos del studio */}
+          <div>
+            <label className="text-xs uppercase tracking-widest block mb-2" style={{ color: "var(--color-text-muted)" }}>
+              Recursos
+            </label>
+
+            {loadingResources ? (
+              <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
+                [CARGANDO_RECURSOS...]
+              </p>
+            ) : resourcesError ? (
+              <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-accent)" }}>
+                {resourcesError}
+              </p>
+            ) : categories.length === 0 ? (
+              <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
+                // AÚN NO HAY RECURSOS CARGADOS
+              </p>
+            ) : (
+              <>
+                <div className="flex gap-2 flex-wrap mb-3">
+                  {categories.map(cat => (
+                    <button key={cat.id_studio_category} onClick={() => setActiveCategory(cat.id_studio_category)}
+                      className="px-3 py-1 text-xs uppercase tracking-widest transition-all"
+                      style={{
+                        background: activeCategory === cat.id_studio_category ? "var(--color-accent-secondary)" : "transparent",
+                        color: activeCategory === cat.id_studio_category ? "var(--color-bg-dark)" : "var(--color-text-muted)",
+                        border: `1px solid ${activeCategory === cat.id_studio_category ? "var(--color-accent-secondary)" : "var(--color-text-muted)"}`,
+                      }}>
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {activeResources.length === 0 && (
+                    <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
+                      // SIN RECURSOS EN ESTA CATEGORÍA
+                    </p>
+                  )}
+                  {activeResources.map(res => (
+                    <button key={res.id_studio_resource} onClick={() => addResourceToCanvas(res)}
+                      title={res.name}
+                      className="w-14 h-14 flex items-center justify-center transition-all"
+                      style={{ border: "1px solid var(--color-text-muted)", background: "var(--color-bg-light)" }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-accent)"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = "var(--color-text-muted)"}>
+                      <img src={res.url} alt={res.name} className="max-w-full max-h-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Botones */}
           <div className="flex gap-3 flex-wrap pt-2">
             <button onClick={generate}
@@ -213,6 +364,21 @@ export default function StudioEditor({ hasAccess }) {
                   style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
                   ↓ ATRÁS
                 </button>
+                <button onClick={() => removeElement(selectedId)}
+                  className="px-3 py-1 text-xs uppercase tracking-widest"
+                  style={{ border: "1px solid var(--color-accent)", color: "var(--color-accent)" }}>
+                  ✕ ELIMINAR
+                </button>
+                <button onClick={() => sendToEdge(selectedId, "front")}
+                  className="px-3 py-1 text-xs uppercase tracking-widest"
+                  style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}>
+                  ⇈ AL FRENTE
+                </button>
+                <button onClick={() => sendToEdge(selectedId, "back")}
+                  className="px-3 py-1 text-xs uppercase tracking-widest"
+                  style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+                  ⇊ AL FONDO
+                </button>
               </div>
             </div>
           )}
@@ -225,18 +391,43 @@ export default function StudioEditor({ hasAccess }) {
           </label>
           <div style={{ border: "1px solid var(--color-text-muted)", display: "inline-block" }}>
             <Stage ref={stageRef} width={fmt.width} height={fmt.height} onClick={() => setSelectedId(null)}>
-              <Layer>
+              <Layer ref={layerRef}>
                 {imageUrl && <UploadedImage src={imageUrl} width={fmt.width} height={fmt.height} />}
                 {elements.map(el => {
                   const isSelected = el.id === selectedId;
                   const commonProps = {
                     key: el.id,
+                    id: el.id,
                     onClick: (e) => { e.cancelBubble = true; setSelectedId(el.id); },
                     draggable: true,
                     onDragEnd: (e) => {
                       setElements(prev => prev.map(item =>
                         item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item
                       ));
+                    },
+                    onTransformEnd: (e) => {
+                      const node = e.target;
+                      const scaleX = node.scaleX();
+                      const scaleY = node.scaleY();
+                      node.scaleX(1);
+                      node.scaleY(1);
+                      setElements(prev => prev.map(item => {
+                        if (item.id !== el.id) return item;
+                        if (item.type === "circle") {
+                          return { ...item, x: node.x(), y: node.y(), radius: Math.max(5, item.radius * scaleX), rotation: node.rotation() };
+                        }
+                        if (item.type === "text") {
+                          return { ...item, x: node.x(), y: node.y(), fontSize: Math.max(6, item.fontSize * scaleY), rotation: node.rotation() };
+                        }
+                        return {
+                          ...item,
+                          x: node.x(),
+                          y: node.y(),
+                          width: Math.max(10, item.width * scaleX),
+                          height: Math.max(10, item.height * scaleY),
+                          rotation: node.rotation(),
+                        };
+                      }));
                     },
                     opacity: el.opacity,
                     rotation: el.rotation,
@@ -256,8 +447,19 @@ export default function StudioEditor({ hasAccess }) {
                   if (el.type === "line") return (
                     <Line {...commonProps} x={el.x} y={el.y} points={el.points} />
                   );
+                  if (el.type === "resource") return (
+                    <ResourceImage {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height} src={el.src} />
+                  );
                   return null;
                 })}
+                <Transformer
+                  ref={transformerRef}
+                  rotateEnabled={true}
+                  boundBoxFunc={(oldBox, newBox) => {
+                    if (newBox.width < 10 || newBox.height < 10) return oldBox;
+                    return newBox;
+                  }}
+                />
               </Layer>
             </Stage>
           </div>

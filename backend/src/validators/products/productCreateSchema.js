@@ -32,6 +32,13 @@ const productSchema = Joi.object({
       'number.positive': `"price" debe ser un número positivo`,
       'any.required': `"price" es obligatorio`
     }),
+  artwork_level: Joi.string()
+    .valid('experimental', 'signature', 'premium')
+    .default('experimental')
+    .messages({
+      'string.base': `"artwork_level" debe ser un texto`,
+      'any.only': `"artwork_level" debe ser uno de estos valores: experimental, signature o premium`
+    }),
   id_category: Joi.number()
     .integer()
     .required()
@@ -56,6 +63,19 @@ const productSchema = Joi.object({
     .allow(null)
     .messages({
       'date.base': `"sold_at" debe ser una fecha válida`
+    }),
+  is_customizable: Joi.boolean()
+    .default(false)
+    .messages({
+      "boolean.base": `"is_customizable" debe ser verdadero o falso`
+    }),
+  customization_fields: Joi.array()
+    .items(
+      Joi.string().valid("title", "artist", "date", "location")
+    )
+    .allow(null)
+    .messages({
+      "array.base": `"customization_fields" debe ser un arreglo`
     }),
 });
 

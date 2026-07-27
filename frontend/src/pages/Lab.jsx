@@ -63,14 +63,14 @@ export default function Lab() {
               VER_CATÁLOGO
             </Link>
           </div>
-          <StudioEditor hasAccess={false} />
+          <StudioEditor hasAccess={false} token={token} />
         </div>
       ) : (
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs uppercase tracking-widest" style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}>
             ✓ ACCESO_ACTIVO — EXPIRA {new Date(access.expiresAt).toLocaleDateString("es-AR")}
           </div>
-          <StudioEditor hasAccess={true} />
+          <StudioEditor hasAccess={true} token={token} />
         </div>
       )}
     </section>

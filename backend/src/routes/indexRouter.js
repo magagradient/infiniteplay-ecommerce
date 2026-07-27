@@ -31,6 +31,7 @@ const themesRouter = require("./themesRouter");
 const productThemesRouter = require("./productThemesRouter");
 const userCouponsRouter = require("./userCouponsRouter");
 const contactRouter = require("./contactRouter");
+const studioRouter = require("./studioRouter");
 
 
 const router = express.Router();
@@ -66,6 +67,7 @@ router.use("/themes", themesRouter);
 router.use("/product_themes", productThemesRouter);
 router.use("/user_coupons", userCouponsRouter);
 router.use("/contact", contactRouter);
+router.use("/studio", studioRouter);
 
 
 module.exports = router;

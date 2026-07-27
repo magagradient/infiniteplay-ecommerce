@@ -74,7 +74,7 @@ export default function ProductCard({ product, onCardClick }) {
 
       <div className="p-4 flex justify-between items-center">
         <div>
-          <h3 className="font-bold uppercase tracking-tight text-sm mb-1" style={{ color: "var(--color-text)" }}>
+          <h3 className="font-bold uppercase tracking-tight text-sm mb-1 line-clamp-1" style={{ color: "var(--color-text)" }}>
             {product.title || "Producto sin nombre"}
           </h3>
           <p className="text-xs uppercase" style={{ color: "var(--color-text-muted)" }}>

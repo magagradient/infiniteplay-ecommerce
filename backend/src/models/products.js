@@ -24,6 +24,11 @@ module.exports = (sequelize) => {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false
     },
+    artwork_level: {
+      type: DataTypes.ENUM('experimental', 'signature', 'premium'),
+      allowNull: false,
+      defaultValue: 'experimental'
+    },    
     is_sold: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
