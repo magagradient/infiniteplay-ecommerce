@@ -58,7 +58,7 @@ const create = async (req, res) => {
             description,
             description_long,
             price,
-            artwork_level: artwork_level ?? "experimental",
+            artwork_level: artwork_level ?? "core",
             is_sold: is_sold ?? false,
             sold_at,
             id_category,

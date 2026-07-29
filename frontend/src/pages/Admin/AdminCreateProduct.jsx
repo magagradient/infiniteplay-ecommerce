@@ -72,6 +72,7 @@ export default function AdminCreateProduct() {
     description: "",
     description_long: DEFAULT_DESCRIPTION_LONG,
     price: "",
+    artwork_level: "core",
     id_category: "",
     id_series: "",
   });
@@ -209,6 +210,34 @@ export default function AdminCreateProduct() {
           <label style={labelStyle}>Precio (USD) *</label>
           <input name="price" type="number" value={form.price} onChange={handleChange} placeholder="15.00"
             style={inputStyle} onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"} onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Artwork Level</label>
+
+          <Select
+            options={[
+              { value: "core", label: "core" },
+              { value: "signature", label: "Signature" },
+              { value: "premium", label: "Premium" },
+            ]}
+            value={{
+              value: form.artwork_level,
+              label:
+                form.artwork_level === "signature"
+                  ? "Signature"
+                  : form.artwork_level === "premium"
+                    ? "Premium"
+                    : "Core",
+            }}
+            onChange={(option) =>
+              setForm({
+                ...form,
+                artwork_level: option.value,
+              })
+            }
+            styles={selectStyles}
+          />
         </div>
 
         <div>

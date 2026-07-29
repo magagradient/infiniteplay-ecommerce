@@ -4,22 +4,23 @@ const { successResponse, errorResponse } = require("../../../utils/responseHelpe
 
 const update = async (req, res) => {
     try {
-        const {
-            title,
-            description,
-            description_long,
-            price,
-            is_sold,
-            sold_at,
-            id_category,
-            id_series,
-            is_customizable,
-            customization_fields,
-            keywords,
-            colors,
-            styles,
-            themes
-        } = req.body;  // ya validado
+      const {
+        title,
+        description,
+        description_long,
+        price,
+        artwork_level,
+        is_sold,
+        sold_at,
+        id_category,
+        id_series,
+        is_customizable,
+        customization_fields,
+        keywords,
+        colors,
+        styles,
+        themes
+    } = req.body;
 
         const product = await Products.findByPk(req.params.id);
         if (!product) {
@@ -47,6 +48,7 @@ const update = async (req, res) => {
         if (description !== undefined) product.description = description;
         if (description_long !== undefined) product.description_long = description_long;
         if (price !== undefined) product.price = price;
+        if (artwork_level !== undefined) product.artwork_level = artwork_level;
         if (is_sold !== undefined) product.is_sold = is_sold;
         if (sold_at !== undefined) product.sold_at = sold_at;
         if (id_category !== undefined) product.id_category = id_category;

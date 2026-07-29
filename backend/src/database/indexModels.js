@@ -53,6 +53,7 @@ const DownloadLinksModel = require("../models/download_links");
 // Studio
 const StudioCategoriesModel = require("../models/studio_categories");
 const StudioResourcesModel = require("../models/studio_resources");
+const StudioFontsModel = require("../models/studio_fonts");
 
 
 // instanciar modelos:
@@ -91,7 +92,8 @@ const models = {
   Users: UsersModel(sequelize, DataTypes),
   RefreshTokens: RefreshTokensModel(sequelize, DataTypes),
   StudioCategories: StudioCategoriesModel(sequelize, DataTypes),
-  StudioResources: StudioResourcesModel(sequelize, DataTypes)
+  StudioResources: StudioResourcesModel(sequelize, DataTypes),
+  StudioFonts: StudioFontsModel(sequelize, DataTypes)
 };
 
 // relaciones: 

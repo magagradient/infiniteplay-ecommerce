@@ -33,11 +33,11 @@ const productSchema = Joi.object({
       'any.required': `"price" es obligatorio`
     }),
   artwork_level: Joi.string()
-    .valid('experimental', 'signature', 'premium')
-    .default('experimental')
+    .valid('core', 'signature', 'premium')
+    .default('core')
     .messages({
       'string.base': `"artwork_level" debe ser un texto`,
-      'any.only': `"artwork_level" debe ser uno de estos valores: experimental, signature o premium`
+      'any.only': `"artwork_level" debe ser uno de estos valores: core, signature o premium`
     }),
   id_category: Joi.number()
     .integer()

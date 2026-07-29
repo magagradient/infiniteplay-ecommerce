@@ -3,9 +3,9 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.addColumn('products', 'artwork_level', {
-      type: Sequelize.ENUM('experimental', 'signature', 'premium'),
+      type: Sequelize.ENUM('core', 'signature', 'premium'),
       allowNull: false,
-      defaultValue: 'experimental'
+      defaultValue: 'core'
     });
   },
 

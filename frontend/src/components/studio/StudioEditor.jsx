@@ -1,6 +1,8 @@
-import { useRef, useState, useEffect, useCallback } from "react";
-import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Line, Transformer } from "react-konva";
+import { useRef, useState, useEffect } from "react";
+import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Line, Transformer, Group } from "react-konva";
 import useImage from "use-image";
+import StudioResourceModal from "./StudioResourceModal";
+import TextPropertiesPanel from "./TextPropertiesPanel";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -12,62 +14,69 @@ const FORMATS = {
 
 const FONTS = ["Space Grotesk", "Arial", "Georgia", "Courier New", "Impact"];
 
-function randomBetween(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function generateElements(fields, width, height) {
-  const texts = Object.values(fields).filter(Boolean);
-  const elements = [];
-
-  texts.forEach((text, i) => {
-    const fontSize = randomBetween(14, 48);
-    elements.push({
-      id: `text-${i}`,
-      type: "text",
-      text,
-      x: randomBetween(10, width * 0.7),
-      y: randomBetween(10, height - fontSize),
-      fontSize,
-      fontFamily: FONTS[Math.floor(Math.random() * FONTS.length)],
-      fill: `hsl(${Math.random() * 360}, 80%, 80%)`,
-      rotation: randomBetween(-30, 30),
-      opacity: randomBetween(0.6, 1),
-    });
-  });
-
-  const shapeCount = Math.floor(randomBetween(3, 8));
-  for (let i = 0; i < shapeCount; i++) {
-    const type = ["rect", "circle", "line"][Math.floor(Math.random() * 3)];
-    elements.push({
-      id: `shape-${i}`,
-      type,
-      x: randomBetween(0, width),
-      y: randomBetween(0, height),
-      width: randomBetween(20, 120),
-      height: randomBetween(20, 120),
-      radius: randomBetween(10, 60),
-      stroke: `hsl(${Math.random() * 360}, 80%, 70%)`,
-      strokeWidth: randomBetween(1, 4),
-      fill: Math.random() > 0.5 ? `hsla(${Math.random() * 360}, 80%, 70%, 0.2)` : "transparent",
-      rotation: randomBetween(-45, 45),
-      opacity: randomBetween(0.4, 1),
-      points: [0, 0, randomBetween(30, 150), randomBetween(30, 150)],
-    });
-  }
-
-  return elements;
-}
 
 function UploadedImage({ src, width, height }) {
   const [image] = useImage(src);
   return image ? <KonvaImage image={image} width={width} height={height} /> : null;
 }
 
-// NUEVO — renderiza un recurso del studio (sticker/forma) traído de la API
+// renderiza un recurso del studio (sticker/forma) traído de la API
 function ResourceImage({ src, ...props }) {
   const [image] = useImage(src, "anonymous");
   return image ? <KonvaImage {...props} image={image} /> : null;
+}
+
+let measureCtx;
+function getMeasureCtx() {
+  if (!measureCtx) {
+    measureCtx = document.createElement("canvas").getContext("2d");
+  }
+  return measureCtx;
+}
+
+// renderiza texto curvo: dibuja cada letra por separado sobre un arco
+function CurvedText({ el, commonProps }) {
+  const { text, fontSize, fontFamily, fontStyle, fill, letterSpacing = 0, curveIntensity = 30, curveDirection = "up" } = el;
+
+  const ctx = getMeasureCtx();
+  const weight = (fontStyle || "").includes("bold") ? "bold " : "";
+  const italic = (fontStyle || "").includes("italic") ? "italic " : "";
+  ctx.font = `${italic}${weight}${fontSize}px ${fontFamily}`;
+
+  const chars = text.split("");
+  const widths = chars.map(c => ctx.measureText(c).width + letterSpacing);
+  const totalWidth = widths.reduce((a, b) => a + b, 0) || 1;
+
+  const intensity = Math.max(curveIntensity, 1) / 100;
+  const angleSpread = intensity * Math.PI;
+  const radius = totalWidth / angleSpread;
+  const dir = curveDirection === "up" ? -1 : 1;
+
+  let cum = 0;
+  const raw = chars.map((c, i) => {
+    const w = widths[i];
+    const centerCum = cum + w / 2;
+    cum += w;
+    const t = centerCum / totalWidth - 0.5;
+    const angle = t * angleSpread;
+    const x = radius * Math.sin(angle);
+    const y = dir * radius * (1 - Math.cos(angle));
+    const rotationDeg = dir * (angle * 180 / Math.PI);
+    return { c, w, x, y, rotationDeg };
+  });
+
+  // normaliza para que la esquina arriba-izquierda del texto curvo quede en (0,0),
+  // igual que el ancla del texto recto — así no salta al activar/desactivar curva
+  const minX = Math.min(...raw.map(r => r.x - r.w / 2));
+  const minY = Math.min(...raw.map(r => r.y - fontSize / 2));
+
+  const letters = raw.map((r, i) => (
+    <Text key={i} text={r.c} x={r.x - minX} y={r.y - minY} rotation={r.rotationDeg}
+      fontSize={fontSize} fontFamily={fontFamily} fontStyle={fontStyle || "normal"}
+      fill={fill} offsetX={r.w / 2} offsetY={fontSize / 2} />
+  ));
+
+  return <Group {...commonProps} x={el.x} y={el.y}>{letters}</Group>;
 }
 
 export default function StudioEditor({ hasAccess, token }) {
@@ -82,6 +91,19 @@ export default function StudioEditor({ hasAccess, token }) {
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
 
+  // recursos del studio (imágenes) traídos de la API
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [loadingResources, setLoadingResources] = useState(true);
+  const [resourcesError, setResourcesError] = useState(null);
+
+  // fuentes curadas del studio
+  const [fonts, setFonts] = useState([]);
+
+  // modal de biblioteca (imágenes / fuentes)
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState("images");
+
   useEffect(() => {
     if (!transformerRef.current || !layerRef.current) return;
     const stage = stageRef.current;
@@ -94,12 +116,6 @@ export default function StudioEditor({ hasAccess, token }) {
     }
     transformerRef.current.getLayer().batchDraw();
   }, [selectedId, elements]);
-
-  // NUEVO — recursos del studio traídos de la API
-  const [categories, setCategories] = useState([]);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [loadingResources, setLoadingResources] = useState(true);
-  const [resourcesError, setResourcesError] = useState(null);
 
   useEffect(() => {
     fetch(`${API}/studio/categories`, {
@@ -115,17 +131,53 @@ export default function StudioEditor({ hasAccess, token }) {
       .finally(() => setLoadingResources(false));
   }, [token]);
 
+  useEffect(() => {
+    fetch(`${API}/studio/fonts`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => {
+        setFonts(data);
+        if (data.length > 0) {
+          const families = data.map(f => f.google_font_name.replace(/ /g, "+")).join("&family=");
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = `https://fonts.googleapis.com/css2?family=${families}&display=swap`;
+          document.head.appendChild(link);
+        }
+      });
+  }, [token]);
+
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setImageUrl(URL.createObjectURL(file));
   };
 
-  const generate = useCallback(() => {
-    setElements(generateElements(fields, fmt.width, fmt.height));
-  }, [fields, fmt]);
+  const addTextToCanvas = (key) => {
+    const text = fields[key];
+    if (!text) return;
+    const textCount = elements.filter(el => el.type === "text").length;
+    setElements(prev => [
+      ...prev,
+      {
+        id: `text-${key}-${Date.now()}`,
+        type: "text",
+        text,
+        x: 20,
+        y: 20 + textCount * 40,
+        fontSize: 32,
+        fontFamily: "Space Grotesk",
+        fontStyle: "normal",
+        align: "left",
+        lineHeight: 1,
+        letterSpacing: 0,
+        fill: "#ffffff",
+        rotation: 0,
+        opacity: 1,
+      },
+    ]);
+  };
 
-  // NUEVO — agrega un recurso (sticker/forma) al canvas como elemento independiente
+  // agrega un recurso (sticker/forma) al canvas como elemento independiente
   const addResourceToCanvas = (resource) => {
     const size = 80;
     setElements(prev => [
@@ -175,18 +227,18 @@ export default function StudioEditor({ hasAccess, token }) {
 
   const handleDownload = () => {
     if (!stageRef.current || !transformerRef.current) return;
-  
+
     // Ocultar el Transformer antes de exportar
     transformerRef.current.nodes([]);
     transformerRef.current.getLayer().batchDraw();
-  
+
     const scale = fmt.exportWidth / fmt.width;
     const uri = stageRef.current.toDataURL({ pixelRatio: scale });
     const a = document.createElement("a");
     a.href = uri;
     a.download = `infinite-play-${format}.png`;
     a.click();
-  
+
     // Restaurar el Transformer si seguía habiendo algo seleccionado
     if (selectedId) {
       const node = stageRef.current.findOne(`#${selectedId}`);
@@ -196,8 +248,15 @@ export default function StudioEditor({ hasAccess, token }) {
       }
     }
   };
-  
+
   const activeResources = categories.find(c => c.id_studio_category === activeCategory)?.resources || [];
+
+  // helper para editar el elemento actualmente seleccionado (usado por el panel de texto y el picker de fuentes)
+  const updateSelectedElement = (props) => {
+    setElements(prev => prev.map(el => el.id === selectedId ? { ...el, ...props } : el));
+  };
+
+  const selectedElement = elements.find(el => el.id === selectedId) || null;
 
   return (
     <div style={{ fontFamily: "Space Grotesk" }}>
@@ -247,86 +306,33 @@ export default function StudioEditor({ hasAccess, token }) {
               { key: "year", placeholder: "Año (opcional)" },
               { key: "extra", placeholder: "Texto libre (opcional)" },
             ].map(({ key, placeholder }) => (
-              <input key={key} value={fields[key]} onChange={e => setFields({ ...fields, [key]: e.target.value })}
-                placeholder={placeholder}
-                className="w-full px-3 py-2 text-xs uppercase tracking-widest outline-none"
-                style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-text-muted)", color: "var(--color-text)" }}
-                onFocus={e => e.target.style.borderColor = "var(--color-accent)"}
-                onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"} />
+              <div key={key} className="flex gap-2">
+                <input value={fields[key]} onChange={e => setFields({ ...fields, [key]: e.target.value })}
+                  placeholder={placeholder}
+                  className="flex-1 px-3 py-2 text-xs uppercase tracking-widest outline-none"
+                  style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-text-muted)", color: "var(--color-text)" }}
+                  onFocus={e => e.target.style.borderColor = "var(--color-accent)"}
+                  onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"} />
+                <button onClick={() => addTextToCanvas(key)}
+                  className="px-3 py-2 text-xs uppercase tracking-widest whitespace-nowrap"
+                  style={{ border: "1px solid var(--color-accent)", color: "var(--color-accent)" }}>
+                  + Agregar
+                </button>
+              </div>
             ))}
           </div>
 
-          {/* NUEVO — Recursos del studio */}
+          {/* Biblioteca de recursos (imágenes y fuentes) — ahora vive en modal aparte */}
           <div>
-            <label className="text-xs uppercase tracking-widest block mb-2" style={{ color: "var(--color-text-muted)" }}>
-              Recursos
-            </label>
-
-            {loadingResources ? (
-              <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
-                [CARGANDO_RECURSOS...]
-              </p>
-            ) : resourcesError ? (
-              <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-accent)" }}>
-                {resourcesError}
-              </p>
-            ) : categories.length === 0 ? (
-              <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
-                // AÚN NO HAY RECURSOS CARGADOS
-              </p>
-            ) : (
-              <>
-                <div className="flex gap-2 flex-wrap mb-3">
-                  {categories.map(cat => (
-                    <button key={cat.id_studio_category} onClick={() => setActiveCategory(cat.id_studio_category)}
-                      className="px-3 py-1 text-xs uppercase tracking-widest transition-all"
-                      style={{
-                        background: activeCategory === cat.id_studio_category ? "var(--color-accent-secondary)" : "transparent",
-                        color: activeCategory === cat.id_studio_category ? "var(--color-bg-dark)" : "var(--color-text-muted)",
-                        border: `1px solid ${activeCategory === cat.id_studio_category ? "var(--color-accent-secondary)" : "var(--color-text-muted)"}`,
-                      }}>
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {activeResources.length === 0 && (
-                    <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
-                      // SIN RECURSOS EN ESTA CATEGORÍA
-                    </p>
-                  )}
-                  {activeResources.map(res => (
-                    <button key={res.id_studio_resource} onClick={() => addResourceToCanvas(res)}
-                      title={res.name}
-                      className="w-14 h-14 flex items-center justify-center transition-all"
-                      style={{ border: "1px solid var(--color-text-muted)", background: "var(--color-bg-light)" }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-accent)"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = "var(--color-text-muted)"}>
-                      <img src={res.url} alt={res.name} className="max-w-full max-h-full object-contain" />
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <button onClick={() => { setModalTab("images"); setModalOpen(true); }}
+              className="px-4 py-2 text-xs uppercase tracking-widest"
+              style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+              📂 Abrir biblioteca de recursos
+            </button>
           </div>
 
           {/* Botones */}
           <div className="flex gap-3 flex-wrap pt-2">
-            <button onClick={generate}
-              className="px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all"
-              style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
-              GENERAR
-            </button>
-
-            {elements.length > 0 && (
-              <button onClick={generate}
-                className="px-6 py-2 text-xs uppercase tracking-widest transition-all"
-                style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
-                REGENERAR
-              </button>
-            )}
-
             <div className="relative group">
               <button
                 onClick={hasAccess ? handleDownload : undefined}
@@ -382,10 +388,19 @@ export default function StudioEditor({ hasAccess, token }) {
               </div>
             </div>
           )}
+
+          {/* Propiedades de texto — solo si el elemento seleccionado es texto */}
+          {selectedElement?.type === "text" && (
+            <TextPropertiesPanel
+              element={selectedElement}
+              onChange={updateSelectedElement}
+              onOpenFontPicker={() => { setModalTab("fonts"); setModalOpen(true); }}
+            />
+          )}
         </div>
 
         {/* Derecha — canvas */}
-        <div>
+        <div style={{ position: "sticky", top: "12rem", alignSelf: "start" }}>
           <label className="text-xs uppercase tracking-widest block mb-2" style={{ color: "var(--color-text-muted)" }}>
             PREVIEW — {fmt.exportWidth}×{fmt.exportHeight}px
           </label>
@@ -434,10 +449,16 @@ export default function StudioEditor({ hasAccess, token }) {
                     stroke: isSelected ? "white" : el.stroke,
                     strokeWidth: isSelected ? 2 : el.strokeWidth,
                   };
-
-                  if (el.type === "text") return (
-                    <Text {...commonProps} x={el.x} y={el.y} text={el.text} fontSize={el.fontSize} fontFamily={el.fontFamily} fill={isSelected ? "white" : el.fill} />
-                  );
+                  if (el.type === "text") {
+                    if (el.curved) return <CurvedText key={el.id} el={el} commonProps={commonProps} />;
+                    return (
+                      <Text {...commonProps} x={el.x} y={el.y} text={el.text} fontSize={el.fontSize}
+                        fontFamily={el.fontFamily} fontStyle={el.fontStyle || "normal"}
+                        align={el.align || "left"} lineHeight={el.lineHeight ?? 1}
+                        letterSpacing={el.letterSpacing ?? 0}
+                        fill={isSelected ? "white" : el.fill} />
+                    );
+                  }
                   if (el.type === "rect") return (
                     <Rect {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height} fill={el.fill} />
                   );
@@ -465,6 +486,17 @@ export default function StudioEditor({ hasAccess, token }) {
           </div>
         </div>
       </div>
+
+      <StudioResourceModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        categories={categories}
+        fonts={fonts}
+        onSelectResource={addResourceToCanvas}
+        onApplyFont={(fontFamily) => updateSelectedElement({ fontFamily })}
+        initialTab={modalTab}
+        selectedElement={selectedElement}
+      />
     </div>
   );
 }

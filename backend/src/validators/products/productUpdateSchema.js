@@ -20,11 +20,11 @@ const productUpdateSchema = Joi.object({
       'string.max': `"description" no puede tener más de {#limit} caracteres`,
     }),
   artwork_level: Joi.string()
-    .valid('experimental', 'signature', 'premium')
+    .valid('core', 'signature', 'premium')
     .optional()
     .messages({
       'string.base': `"artwork_level" debe ser un texto`,
-      'any.only': `"artwork_level" debe ser uno de estos valores: experimental, signature o premium`,
+      'any.only': `"artwork_level" debe ser uno de estos valores: core, signature o premium`,
     }),
   price: Joi.number()
     .positive()

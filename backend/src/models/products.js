@@ -25,9 +25,9 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     artwork_level: {
-      type: DataTypes.ENUM('experimental', 'signature', 'premium'),
+      type: DataTypes.ENUM('core', 'signature', 'premium'),
       allowNull: false,
-      defaultValue: 'experimental'
+      defaultValue: 'core'
     },    
     is_sold: {
       type: DataTypes.BOOLEAN,

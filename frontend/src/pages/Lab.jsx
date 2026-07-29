@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import StudioEditor from "../components/StudioEditor";
+import StudioEditor from "../components/studio/StudioEditor";
 
 const API = import.meta.env.VITE_API_URL;
 

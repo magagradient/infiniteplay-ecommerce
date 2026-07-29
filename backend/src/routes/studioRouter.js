@@ -9,6 +9,10 @@ const listResources = require("../controllers/studio/resources/index");
 const createResource = require("../controllers/studio/resources/create");
 const destroyResource = require("../controllers/studio/resources/destroy");
 
+const listFonts = require("../controllers/studio/fonts/index");
+const createFont = require("../controllers/studio/fonts/create");
+const destroyFont = require("../controllers/studio/fonts/destroy");
+
 const authMiddleware = require("../middlewares/authMiddleware");
 const studioAccess = require("../middlewares/studioAccess");
 const uploadStudioResource = require("../middlewares/uploadStudioResource");
@@ -24,5 +28,10 @@ router.delete("/categories/:id", authMiddleware(["admin"]), destroyCategory);
 router.get("/resources", authMiddleware(), studioAccess, listResources);
 router.post("/resources", authMiddleware(["admin"]), uploadStudioResource.single("image"), createResource);
 router.delete("/resources/:id", authMiddleware(["admin"]), destroyResource);
+
+/* ---------- Fonts ---------- */
+router.get("/fonts", authMiddleware(), studioAccess, listFonts);
+router.post("/fonts", authMiddleware(["admin"]), createFont);
+router.delete("/fonts/:id", authMiddleware(["admin"]), destroyFont);
 
 module.exports = router;
