@@ -1,5 +1,6 @@
 const { Categories } = require("../../../database/indexModels");
 const responseHelper = require("../../../utils/responseHelper");
+const createDefaultPricingRules = require("../../../services/pricingRules/createDefaultPricingRules");
 
 const create = async (req, res) => {
     const { name } = req.body;
@@ -19,6 +20,9 @@ const create = async (req, res) => {
                 409
             );
         }
+
+        // Crear automáticamente las reglas de precio
+        await createDefaultPricingRules(category.id_category);
 
         return responseHelper.successResponse(res, category, "categories_create");
 

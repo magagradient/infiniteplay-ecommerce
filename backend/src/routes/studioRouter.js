@@ -17,21 +17,31 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const studioAccess = require("../middlewares/studioAccess");
 const uploadStudioResource = require("../middlewares/uploadStudioResource");
 
+const listDrafts = require("../controllers/studio/drafts/index");
+const createDraft = require("../controllers/studio/drafts/create");
+const destroyDraft = require("../controllers/studio/drafts/destroy");
+
+
 const router = express.Router();
 
 /* ---------- Categories ---------- */
-router.get("/categories", authMiddleware(), listCategories); // ⬅ cambio: ahora requiere login
+router.get("/categories", listCategories); // ⬅ cambio: ahora requiere login
 router.post("/categories", authMiddleware(["admin"]), createCategory);
 router.delete("/categories/:id", authMiddleware(["admin"]), destroyCategory);
 
 /* ---------- Resources ---------- */
-router.get("/resources", authMiddleware(), studioAccess, listResources);
+router.get("/resources", listResources);
 router.post("/resources", authMiddleware(["admin"]), uploadStudioResource.single("image"), createResource);
 router.delete("/resources/:id", authMiddleware(["admin"]), destroyResource);
 
 /* ---------- Fonts ---------- */
-router.get("/fonts", authMiddleware(), studioAccess, listFonts);
+router.get("/fonts", listFonts);
 router.post("/fonts", authMiddleware(["admin"]), createFont);
 router.delete("/fonts/:id", authMiddleware(["admin"]), destroyFont);
+
+/* ---------- Drafts ---------- */
+router.get("/drafts", listDrafts);
+router.post("/drafts", authMiddleware(), uploadStudioResource.single("image"), createDraft);
+router.delete("/drafts/:id", authMiddleware(), destroyDraft);
 
 module.exports = router;

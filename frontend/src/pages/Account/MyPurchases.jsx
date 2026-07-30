@@ -51,6 +51,12 @@ export default function MyPurchases() {
 
   if (loading) return <p className="text-text-muted text-xs uppercase tracking-widest p-16">[CARGANDO...]</p>;
 
+  const getDownloadUrl = (item) => {
+    const cover = item.product?.images?.find(img => img.image_type === "cover");
+    if (!cover) return null;
+    return cover.image_url.replace("/upload/", "/upload/fl_attachment/");
+  };
+
   return (
     <section className="min-h-screen bg-bg-dark px-16 py-12" style={{ fontFamily: "Space Grotesk" }}>
       <div className="max-w-3xl mx-auto">
@@ -120,6 +126,7 @@ export default function MyPurchases() {
                           {item.artist_name && <p className="text-text-muted text-xs uppercase">// {item.artist_name}</p>}
                           {item.artist_bio && <p className="text-text-muted/70 text-xs mt-1">{item.artist_bio}</p>}
                           {item.music_url && <a href={item.music_url} target="_blank" rel="noreferrer" className="text-accent-secondary text-xs uppercase hover:text-text-primary transition-colors">→ ESCUCHAR</a>}
+                          {getDownloadUrl(item) && (<a href={getDownloadUrl(item)} download className="block mt-2 text-accent text-xs uppercase font-bold hover:text-text-primary transition-colors">↓ DESCARGAR_OBRA</a>)}
                           <button
                             onClick={() => handleEdit(order.id_order, item.id_product, item)}
                             className="block mt-2 text-text-muted text-xs uppercase hover:text-accent-secondary transition-colors"

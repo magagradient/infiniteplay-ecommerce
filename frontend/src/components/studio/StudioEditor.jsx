@@ -3,6 +3,7 @@ import { Stage, Layer, Image as KonvaImage, Text, Rect, Circle, Line, Transforme
 import useImage from "use-image";
 import StudioResourceModal from "./StudioResourceModal";
 import TextPropertiesPanel from "./TextPropertiesPanel";
+import StudioDraftsModal from "./StudioDraftsModal";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -79,10 +80,11 @@ function CurvedText({ el, commonProps }) {
   return <Group {...commonProps} x={el.x} y={el.y}>{letters}</Group>;
 }
 
-export default function StudioEditor({ hasAccess, token }) {
+export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
   const [format, setFormat] = useState("cover");
   const [fields, setFields] = useState({ artist: "", album: "", year: "", extra: "" });
   const [imageUrl, setImageUrl] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [elements, setElements] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const stageRef = useRef(null);
@@ -103,6 +105,71 @@ export default function StudioEditor({ hasAccess, token }) {
   // modal de biblioteca (imágenes / fuentes)
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState("images");
+  const [draftsOpen, setDraftsOpen] = useState(false);
+
+  const [zoom, setZoom] = useState(1);
+
+  const zoomIn = () => setZoom(z => Math.min(z + 0.1, 3));
+  const zoomOut = () => setZoom(z => Math.max(z - 0.1, 0.25));
+  const resetZoom = () => { setZoom(1); setStagePos({ x: 0, y: 0 }); };
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenImg, setFullscreenImg] = useState(null);
+
+  const openFullscreen = () => {
+    if (!stageRef.current) return;
+    const wasSelected = selectedId;
+    if (transformerRef.current) {
+      transformerRef.current.nodes([]);
+      transformerRef.current.getLayer().batchDraw();
+    }
+    const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+    setFullscreenImg(uri);
+    setIsFullscreen(true);
+    if (wasSelected && transformerRef.current) {
+      const node = stageRef.current.findOne(`#${wasSelected}`);
+      if (node) {
+        transformerRef.current.nodes([node]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKey = (e) => { if (e.key === "Escape") setIsFullscreen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isFullscreen]);
+
+  const isPanning = useRef(false);
+  const lastPointer = useRef({ x: 0, y: 0 });
+
+  const handleStageMouseDown = (e) => {
+    if (e.target === e.target.getStage()) {
+      isPanning.current = true;
+      lastPointer.current = e.target.getStage().getPointerPosition();
+    }
+  };
+  const handleStageMouseMove = (e) => {
+    if (!isPanning.current) return;
+    const stage = e.target.getStage();
+    const pos = stage.getPointerPosition();
+    const dx = pos.x - lastPointer.current.x;
+    const dy = pos.y - lastPointer.current.y;
+    lastPointer.current = pos;
+    setStagePos(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+  };
+  const handleStageMouseUp = () => { isPanning.current = false; };
+
+  const handleWheel = (e) => {
+    e.evt.preventDefault();
+    setZoom(z => {
+      const next = z - e.evt.deltaY * 0.001;
+      return Math.min(3, Math.max(0.25, next));
+    });
+  };
 
   useEffect(() => {
     if (!transformerRef.current || !layerRef.current) return;
@@ -149,6 +216,7 @@ export default function StudioEditor({ hasAccess, token }) {
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setImageFile(file);
     setImageUrl(URL.createObjectURL(file));
   };
 
@@ -175,6 +243,14 @@ export default function StudioEditor({ hasAccess, token }) {
         opacity: 1,
       },
     ]);
+  };
+
+  const loadDraft = (draft) => {
+    setElements(draft.elements);
+    setFormat(draft.format);
+    setImageUrl(draft.background_image_url || null);
+    setImageFile(null);
+    setSelectedId(null);
   };
 
   // agrega un recurso (sticker/forma) al canvas como elemento independiente
@@ -323,12 +399,21 @@ export default function StudioEditor({ hasAccess, token }) {
           </div>
 
           {/* Biblioteca de recursos (imágenes y fuentes) — ahora vive en modal aparte */}
-          <div>
+
+          <div className="flex gap-2 flex-wrap">
             <button onClick={() => { setModalTab("images"); setModalOpen(true); }}
               className="px-4 py-2 text-xs uppercase tracking-widest"
               style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
               📂 Abrir biblioteca de recursos
             </button>
+
+            {canSaveDraft && (
+              <button onClick={() => setDraftsOpen(true)}
+                className="px-4 py-2 text-xs uppercase tracking-widest"
+                style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+                💾 Mis borradores
+              </button>
+            )}
           </div>
 
           {/* Botones */}
@@ -347,7 +432,7 @@ export default function StudioEditor({ hasAccess, token }) {
                 DESCARGAR
               </button>
               {!hasAccess && (
-                <div className="absolute bottom-full left-0 mb-2 px-3 py-2 text-xs uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
+                <div className="absolute bottom-full left-0 mb-2 px-3 py-2 text-xs uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                   style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-accent)", color: "var(--color-accent)" }}>
                   COMPRÁ UNA OBRA PARA DESCARGAR
                 </div>
@@ -404,8 +489,38 @@ export default function StudioEditor({ hasAccess, token }) {
           <label className="text-xs uppercase tracking-widest block mb-2" style={{ color: "var(--color-text-muted)" }}>
             PREVIEW — {fmt.exportWidth}×{fmt.exportHeight}px
           </label>
-          <div style={{ border: "1px solid var(--color-text-muted)", display: "inline-block" }}>
-            <Stage ref={stageRef} width={fmt.width} height={fmt.height} onClick={() => setSelectedId(null)}>
+
+          <div className="flex items-center gap-2 mb-2">
+            <button onClick={zoomOut} className="px-3 py-1 text-xs uppercase tracking-widest"
+              style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+              −
+            </button>
+            <span className="text-xs" style={{ color: "var(--color-text-muted)", minWidth: 40, textAlign: "center" }}>
+              {Math.round(zoom * 100)}%
+            </span>
+            <button onClick={zoomIn} className="px-3 py-1 text-xs uppercase tracking-widest"
+              style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+              +
+            </button>
+            <button onClick={resetZoom} className="px-3 py-1 text-xs uppercase tracking-widest"
+              style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+              Restablecer
+            </button>
+            <button onClick={openFullscreen} className="px-3 py-1 text-xs uppercase tracking-widest"
+              style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+              ⛶ Ver completo
+            </button>
+          </div>
+
+          <div style={{ border: "1px solid var(--color-text-muted)", width: fmt.width, height: fmt.height, overflow: "hidden", cursor: "grab" }}>
+            <Stage ref={stageRef} width={fmt.width} height={fmt.height}
+              scaleX={zoom} scaleY={zoom} onWheel={handleWheel}
+              x={stagePos.x} y={stagePos.y}
+              onMouseDown={handleStageMouseDown}
+              onMouseMove={handleStageMouseMove}
+              onMouseUp={handleStageMouseUp}
+              onMouseLeave={handleStageMouseUp}
+              onClick={() => setSelectedId(null)}>
               <Layer ref={layerRef}>
                 {imageUrl && <UploadedImage src={imageUrl} width={fmt.width} height={fmt.height} />}
                 {elements.map(el => {
@@ -497,6 +612,34 @@ export default function StudioEditor({ hasAccess, token }) {
         initialTab={modalTab}
         selectedElement={selectedElement}
       />
+
+      {canSaveDraft && (
+        <StudioDraftsModal
+          isOpen={draftsOpen}
+          onClose={() => setDraftsOpen(false)}
+          token={token}
+          format={format}
+          elements={elements}
+          imageUrl={imageUrl}
+          imageFile={imageFile}
+          onLoadDraft={loadDraft}
+        />
+      )}
+
+      {isFullscreen && (
+        <div onClick={() => setIsFullscreen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.9)", cursor: "zoom-out" }}>
+          <img src={fullscreenImg} alt="Preview completo"
+            style={{ maxWidth: "95vw", maxHeight: "95vh", objectFit: "contain" }} />
+          <button onClick={() => setIsFullscreen(false)}
+            className="absolute top-4 right-4 px-4 py-2 text-xs uppercase tracking-widest"
+            style={{ border: "1px solid white", color: "white" }}>
+            ✕ Cerrar
+          </button>
+        </div>
+      )}
     </div>
+
   );
 }

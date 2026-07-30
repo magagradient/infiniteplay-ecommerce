@@ -37,40 +37,47 @@ export default function Lab() {
 
       {loading ? (
         <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>[VERIFICANDO_ACCESO...]</p>
-      ) : !user ? (
-        <div className="max-w-md border p-8" style={{ borderColor: "var(--color-text-muted)" }}>
-          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: "var(--color-text-muted)" }}>
-            // NECESITÁS INICIAR SESIÓN PARA ACCEDER AL STUDIO
-          </p>
-          <Link to="/account/login"
-            className="block w-full py-3 text-center text-xs font-bold uppercase tracking-widest transition-all"
-            style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
-            INICIAR_SESIÓN
-          </Link>
-        </div>
-      ) : !access?.hasAccess ? (
-        <div>
-          <div className="max-w-md border p-6 mb-8" style={{ borderColor: "var(--color-accent)", background: "var(--color-bg-light)" }}>
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--color-accent)" }}>
-        // MODO_DEMO — DESCARGA BLOQUEADA
-            </p>
-            <p className="text-sm mb-4" style={{ color: "var(--color-text-muted)" }}>
-              Podés probar el editor libremente. Para descargar tu creación, comprá una obra.
-            </p>
-            <Link to="/products"
-              className="inline-block px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all"
-              style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
-              VER_CATÁLOGO
-            </Link>
-          </div>
-          <StudioEditor hasAccess={false} token={token} />
-        </div>
       ) : (
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs uppercase tracking-widest" style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}>
-            ✓ ACCESO_ACTIVO — EXPIRA {new Date(access.expiresAt).toLocaleDateString("es-AR")}
-          </div>
-          <StudioEditor hasAccess={true} token={token} />
+          {!user && (
+            <div className="max-w-md border p-6 mb-8" style={{ borderColor: "var(--color-text-muted)" }}>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--color-text-muted)" }}>
+          // MODO_INVITADO
+              </p>
+              <p className="text-sm mb-4" style={{ color: "var(--color-text-muted)" }}>
+                Podés probar el editor libremente. Creá una cuenta para guardar borradores, y comprá una obra para descargar tu creación.
+              </p>
+              <Link to="/account/register"
+                className="inline-block px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all"
+                style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
+                CREAR_CUENTA
+              </Link>
+            </div>
+          )}
+
+          {user && !access?.hasAccess && (
+            <div className="max-w-md border p-6 mb-8" style={{ borderColor: "var(--color-accent)", background: "var(--color-bg-light)" }}>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--color-accent)" }}>
+          // MODO_DEMO — DESCARGA BLOQUEADA
+              </p>
+              <p className="text-sm mb-4" style={{ color: "var(--color-text-muted)" }}>
+                Podés guardar borradores. Para descargar tu creación, comprá una obra.
+              </p>
+              <Link to="/products"
+                className="inline-block px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all"
+                style={{ background: "var(--color-accent)", color: "var(--color-text)" }}>
+                VER_CATÁLOGO
+              </Link>
+            </div>
+          )}
+
+          {user && access?.hasAccess && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs uppercase tracking-widest" style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}>
+              ✓ ACCESO_ACTIVO — EXPIRA {new Date(access.expiresAt).toLocaleDateString("es-AR")}
+            </div>
+          )}
+
+          <StudioEditor hasAccess={!!access?.hasAccess} canSaveDraft={!!user} token={token} />
         </div>
       )}
     </section>

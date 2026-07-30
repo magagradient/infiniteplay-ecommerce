@@ -18,6 +18,7 @@ const ProductStylesModel = require("../models/product_styles");
 const ProductThemesModel = require("../models/product_themes");
 const ProductTechnicalDetailsModel = require("../models/product_technical_details");
 const ProductIncludedResourcesModel = require("../models/product_included_resources");
+const PricingRulesModel = require("../models/pricing_rules");
 
 // Atributos :
 const ColorsModel = require("../models/colors");
@@ -54,6 +55,7 @@ const DownloadLinksModel = require("../models/download_links");
 const StudioCategoriesModel = require("../models/studio_categories");
 const StudioResourcesModel = require("../models/studio_resources");
 const StudioFontsModel = require("../models/studio_fonts");
+const StudioDraftsModel = require("../models/studio_drafts");
 
 
 // instanciar modelos:
@@ -84,6 +86,7 @@ const models = {
   ProductTechnicalDetails: ProductTechnicalDetailsModel(sequelize, DataTypes),
   ProductIncludedResources: ProductIncludedResourcesModel(sequelize, DataTypes),
   Products: ProductsModel(sequelize, DataTypes),
+  PricingRules: PricingRulesModel(sequelize, DataTypes),
   Series: SeriesModel(sequelize, DataTypes),
   ShoppingCarts: ShoppingCartsModel(sequelize, DataTypes),
   Styles: StylesModel(sequelize, DataTypes),
@@ -93,7 +96,8 @@ const models = {
   RefreshTokens: RefreshTokensModel(sequelize, DataTypes),
   StudioCategories: StudioCategoriesModel(sequelize, DataTypes),
   StudioResources: StudioResourcesModel(sequelize, DataTypes),
-  StudioFonts: StudioFontsModel(sequelize, DataTypes)
+  StudioFonts: StudioFontsModel(sequelize, DataTypes),
+  StudioDrafts: StudioDraftsModel(sequelize, DataTypes)
 };
 
 // relaciones: 
