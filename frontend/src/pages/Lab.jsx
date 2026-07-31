@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { Link } from "react-router-dom";
 import StudioEditor from "../components/studio/StudioEditor";
+import { Link, useSearchParams } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -9,6 +9,9 @@ export default function Lab() {
   const { user, token } = useContext(AuthContext);
   const [access, setAccess] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get("product");
+  const [studioProduct, setStudioProduct] = useState(null);
 
   useEffect(() => {
     if (!token) { setLoading(false); return; }
@@ -19,6 +22,14 @@ export default function Lab() {
       .then(data => setAccess(data.data))
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    if (!productId) return;
+    fetch(`${API}/products/${productId}`)
+      .then(r => r.json())
+      .then(data => setStudioProduct(data.data?.product || null))
+      .catch(() => setStudioProduct(null));
+  }, [productId]);
 
   return (
     <section className="min-h-screen px-16 py-12" style={{ background: "var(--color-bg-dark)", fontFamily: "Space Grotesk" }}>
@@ -77,7 +88,7 @@ export default function Lab() {
             </div>
           )}
 
-          <StudioEditor hasAccess={!!access?.hasAccess} canSaveDraft={!!user} token={token} />
+          <StudioEditor hasAccess={!!access?.hasAccess} canSaveDraft={!!user} token={token} studioProduct={studioProduct} />
         </div>
       )}
     </section>

@@ -2,6 +2,9 @@ const { PricingRules } = require("../../../database/indexModels");
 const responseHelper = require("../../../utils/responseHelper");
 
 const updatePricingRule = async (req, res) => {
+  console.log("PARAMS:", req.params);
+  console.log("BODY:", req.body);
+
   const { id } = req.params;
   const { suggested_price, is_active } = req.body;
 

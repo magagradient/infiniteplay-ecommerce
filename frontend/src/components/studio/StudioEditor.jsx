@@ -5,6 +5,7 @@ import StudioResourceModal from "./StudioResourceModal";
 import TextPropertiesPanel from "./TextPropertiesPanel";
 import StudioDraftsModal from "./StudioDraftsModal";
 
+
 const API = import.meta.env.VITE_API_URL;
 
 const FORMATS = {
@@ -15,10 +16,9 @@ const FORMATS = {
 
 const FONTS = ["Space Grotesk", "Arial", "Georgia", "Courier New", "Impact"];
 
-
 function UploadedImage({ src, width, height }) {
-  const [image] = useImage(src);
-  return image ? <KonvaImage image={image} width={width} height={height} /> : null;
+  const [image] = useImage(src, "anonymous");
+  return image ? <KonvaImage image={image} width={width} height={height} listening={false} /> : null;
 }
 
 // renderiza un recurso del studio (sticker/forma) traído de la API
@@ -80,7 +80,7 @@ function CurvedText({ el, commonProps }) {
   return <Group {...commonProps} x={el.x} y={el.y}>{letters}</Group>;
 }
 
-export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
+export default function StudioEditor({ hasAccess, canSaveDraft, token, studioProduct }) {
   const [format, setFormat] = useState("cover");
   const [fields, setFields] = useState({ artist: "", album: "", year: "", extra: "" });
   const [imageUrl, setImageUrl] = useState(null);
@@ -98,6 +98,8 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [loadingResources, setLoadingResources] = useState(true);
   const [resourcesError, setResourcesError] = useState(null);
+  const [backgroundProductId, setBackgroundProductId] = useState(null);
+  const [downloadBlockedReason, setDownloadBlockedReason] = useState(null);
 
   // fuentes curadas del studio
   const [fonts, setFonts] = useState([]);
@@ -213,12 +215,17 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
       });
   }, [token]);
 
-  const handleImage = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setImageFile(file);
-    setImageUrl(URL.createObjectURL(file));
-  };
+  useEffect(() => {
+    if (!studioProduct) return;
+    const cover = studioProduct.images?.find(img => img.image_type === "cover");
+    const watermarked = cover?.watermark_url || cover?.image_url;
+    if (watermarked) {
+      setImageUrl(watermarked);
+      setImageFile(null);
+      setBackgroundProductId(studioProduct.id_product);
+    }
+  }, [studioProduct]);
+
 
   const addTextToCanvas = (key) => {
     const text = fields[key];
@@ -250,6 +257,7 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
     setFormat(draft.format);
     setImageUrl(draft.background_image_url || null);
     setImageFile(null);
+    setBackgroundProductId(draft.id_product || null);
     setSelectedId(null);
   };
 
@@ -270,6 +278,14 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
         opacity: 1,
       },
     ]);
+  };
+
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setImageUrl(URL.createObjectURL(file));
+    setBackgroundProductId(null);
   };
 
   const moveElement = (id, direction) => {
@@ -301,8 +317,27 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
     });
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!stageRef.current || !transformerRef.current) return;
+
+    if (backgroundProductId) {
+      try {
+        const res = await fetch(`${API}/products/${backgroundProductId}/purchased`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!data.data?.purchased) {
+          setDownloadBlockedReason("Tenés que comprar esta obra puntual para descargarla con tu edición.");
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        setDownloadBlockedReason("No se pudo verificar la compra. Probá de nuevo.");
+        return;
+      }
+    }
+
+    setDownloadBlockedReason(null);
 
     // Ocultar el Transformer antes de exportar
     transformerRef.current.nodes([]);
@@ -315,7 +350,6 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
     a.download = `infinite-play-${format}.png`;
     a.click();
 
-    // Restaurar el Transformer si seguía habiendo algo seleccionado
     if (selectedId) {
       const node = stageRef.current.findOne(`#${selectedId}`);
       if (node) {
@@ -438,6 +472,11 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
                 </div>
               )}
             </div>
+            {downloadBlockedReason && (
+              <p className="text-xs uppercase tracking-widest mt-2" style={{ color: "var(--color-accent)" }}>
+                {downloadBlockedReason}
+              </p>
+            )}
           </div>
 
           {/* Capas */}
@@ -622,6 +661,7 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token }) {
           elements={elements}
           imageUrl={imageUrl}
           imageFile={imageFile}
+          idProduct={backgroundProductId}
           onLoadDraft={loadDraft}
         />
       )}

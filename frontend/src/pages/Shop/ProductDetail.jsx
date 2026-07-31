@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useLocation } from "../../context/LocationContext";
 import RelatedProducts from "../../components/RelatedProducts";
+
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -28,6 +29,7 @@ const INCLUDED_FILES = [
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,7 @@ export default function ProductDetail() {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [mainWatermark, setMainWatermark] = useState(null);
   const { formatPrice } = useLocation();
+
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -61,10 +64,10 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-bg-dark px-16 py-12" style={{ fontFamily: "Space Grotesk" }}>
 
-<div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 justify-center">
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 justify-center">
 
-  {/* Imágenes */}
-  <div className="flex flex-col gap-4 max-w-md">
+        {/* Imágenes */}
+        <div className="flex flex-col gap-4 max-w-md">
 
           <div className="aspect-square overflow-hidden border border-text-muted/30 cursor-zoom-in" onClick={() => setZoomOpen(true)}>
             {mainImage ? (
@@ -246,7 +249,13 @@ export default function ProductDetail() {
             <span className="material-symbols-outlined">add_shopping_cart</span>
             AGREGAR_AL_CARRITO
           </button>
-
+          <button
+            onClick={() => navigate(`/lab?product=${product.id_product}`)}
+            className="w-full py-4 px-8 border border-accent-secondary text-accent-secondary font-bold uppercase tracking-widest hover:bg-accent-secondary hover:text-bg-dark transition-all flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined">edit</span>
+            PROBAR_EN_EL_LAB
+          </button>
         </div>
       </div>
 

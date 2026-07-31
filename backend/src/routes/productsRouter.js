@@ -4,6 +4,7 @@ const router = express.Router();
 const validateSchema = require("../middlewares/validateSchema");
 const validateCategoryAndSeriesExist = require('../middlewares/validateCategoryAndSeriesExist');
 const upload = require("../middlewares/multerConfig");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const {
     productCreateSchema,
@@ -25,6 +26,8 @@ const getRelations = require("../controllers/products/get/getRelations");
 const search = require("../controllers/products/get/search");
 const related = require("../controllers/products/get/related");
 const soldCredit = require("../controllers/products/get/soldCredit");
+const purchased = require("../controllers/products/get/purchased");
+
 
 // patch
 const toggleSold = require("../controllers/products/patch/toggleSold");
@@ -53,6 +56,7 @@ router.get("/status/:type", status);
 router.get("/:id/related", related);
 router.get("/:id/relations", getRelations);
 router.get("/:id/sold-credit", validateSchema(idParamSchema, "params"), soldCredit);
+router.get("/:id/purchased", authMiddleware(), validateSchema(idParamSchema, "params"), purchased);
 router.get("/:id", validateSchema(idParamSchema, "params"), show);
 router.get("/", index);
 

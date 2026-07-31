@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const API = import.meta.env.VITE_API_URL;
 
 export default function StudioDraftsModal({
-  isOpen, onClose, token, format, elements, imageUrl, imageFile, onLoadDraft,
+  isOpen, onClose, token, format, elements, imageUrl, imageFile, idProduct, onLoadDraft,
 }) {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -35,6 +35,8 @@ export default function StudioDraftsModal({
       } else if (imageUrl && !imageUrl.startsWith("blob:")) {
         formData.append("background_image_url", imageUrl);
       }
+
+      if (idProduct) formData.append("id_product", idProduct);
 
       const res = await fetch(`${API}/studio/drafts`, {
         method: "POST",
