@@ -11,6 +11,7 @@ const studioRelations = require("./studio_relations");
 const productTechnicalDetailsRelations = require("./productTechnicalDetails_relations");
 const productIncludedResourcesRelations = require("./productIncludedResources_relations");
 const pricingRulesRelations = require("./pricingRules_relations");
+const productContentsRelations = require("./productContents_relations");
 
 module.exports = (models) => {
     ecommerceRelations(models);
@@ -26,4 +27,5 @@ module.exports = (models) => {
     productTechnicalDetailsRelations(models);
     productIncludedResourcesRelations(models);
     pricingRulesRelations(models);
+    productContentsRelations(models);
 };

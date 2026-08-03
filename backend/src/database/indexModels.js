@@ -19,6 +19,9 @@ const ProductThemesModel = require("../models/product_themes");
 const ProductTechnicalDetailsModel = require("../models/product_technical_details");
 const ProductIncludedResourcesModel = require("../models/product_included_resources");
 const PricingRulesModel = require("../models/pricing_rules");
+const ProductContentsModel = require("../models/product_contents");
+
+
 
 // Atributos :
 const ColorsModel = require("../models/colors");
@@ -85,6 +88,7 @@ const models = {
   ProductThemes: ProductThemesModel(sequelize, DataTypes),
   ProductTechnicalDetails: ProductTechnicalDetailsModel(sequelize, DataTypes),
   ProductIncludedResources: ProductIncludedResourcesModel(sequelize, DataTypes),
+  ProductContents: ProductContentsModel(sequelize, DataTypes),
   Products: ProductsModel(sequelize, DataTypes),
   PricingRules: PricingRulesModel(sequelize, DataTypes),
   Series: SeriesModel(sequelize, DataTypes),

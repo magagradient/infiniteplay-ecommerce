@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
 import FavoritesProvider from "./context/FavoritesContext";
@@ -64,6 +64,131 @@ import AdminPricingRules from "./pages/Admin/AdminPricingRules";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
+function AppContent() {
+  const location = useLocation();
+  const isLab = location.pathname === "/lab";
+
+  return (
+    <div className="flex flex-col min-h-screen">
+
+      {/* Top layout */}
+      {!isLab && <TopBar />}
+      {!isLab && <Navbar />}
+      <CartSidebar />
+
+      {/* Main content */}
+      <main className={isLab ? "flex-grow" : "pt-28 flex-grow"}>
+        <Routes>
+
+          {/* Home */}
+          <Route path="/" element={<Home />} />
+
+          {/* SHOP */}
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          {/* <Route path="/keywords" element={<Keywords />} />
+      <Route path="/series" element={<Series />} /> */}
+          {/* <Route path="/products/animations" element={<Animations />} /> */}
+          {/* <Route path="/products/style" element={<Style />} /> */}
+          {/* <Route path="/products/theme" element={<Theme />} /> */}
+          {/* <Route path="/colors" element={<Colors />} /> */}
+
+          {/* Sold */}
+          <Route path="/sold" element={<Sold />} />
+
+          {/* Lab */}
+          <Route path="/lab" element={<Lab />} />
+
+          {/* Cart */}
+          {/* Cart */}
+          <Route path="/cart" element={<Navigate to="/cart/checkout" replace />} />
+          <Route path="/cart/checkout" element={<Checkout />} />
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Route path="/checkout/failure" element={<CheckoutFailure />} />
+          <Route path="/checkout/pending" element={<CheckoutPending />} />
+
+          {/* Search */}
+          <Route path="/search" element={<Search />} />
+
+          {/* Info */}
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+
+          {/* Account - públicas */}
+          <Route path="/account/login" element={<Login />} />
+          <Route path="/account/register" element={<Register />} />
+          <Route path="/account/logout" element={<Logout />} />
+          <Route path="/account/forgot-password" element={<ForgotPassword />} />
+          <Route path="/account/reset-password/:token" element={<ResetPassword />} />
+
+          {/* Account - protegidas */}
+          <Route
+            path="/account/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account/favorites"
+            element={
+              <ProtectedRoute>
+                <Favorites />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account/my-purchases"
+            element={
+              <ProtectedRoute>
+                <MyPurchases />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="create-product" element={<AdminCreateProduct />} />
+            <Route path="colors" element={<AdminColors />} />
+            <Route path="keywords" element={<AdminKeywords />} />
+            <Route path="series" element={<AdminSeries />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="customizations" element={<AdminCustomizations />} />
+            <Route path="studio" element={<AdminStudio />} />
+            <Route path="pricing-rules" element={<AdminPricingRules />} />
+          </Route>
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+
+      {/* Footer */}
+      {!isLab && <Footer />}
+    </div>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -71,124 +196,7 @@ function App() {
         <FavoritesProvider>
           <CartProvider>
             <Router>
-              <div className="flex flex-col min-h-screen">
-
-                {/* Top layout */}
-                <TopBar />
-                <Navbar />
-                <CartSidebar />
-
-                {/* Main content */}
-                <main className="pt-28 flex-grow">
-                  <Routes>
-
-                    {/* Home */}
-                    <Route path="/" element={<Home />} />
-
-                    {/* SHOP */}
-                    <Route path="/shop" element={<Shop />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/products/:id" element={<ProductDetail />} />
-                    {/* <Route path="/keywords" element={<Keywords />} />
-                <Route path="/series" element={<Series />} /> */}
-                    {/* <Route path="/products/animations" element={<Animations />} /> */}
-                    {/* <Route path="/products/style" element={<Style />} /> */}
-                    {/* <Route path="/products/theme" element={<Theme />} /> */}
-                    {/* <Route path="/colors" element={<Colors />} /> */}
-
-                    {/* Sold */}
-                    <Route path="/sold" element={<Sold />} />
-
-                    {/* Lab */}
-                    <Route path="/lab" element={<Lab />} />
-
-                    {/* Cart */}
-                    {/* Cart */}
-                    <Route path="/cart" element={<Navigate to="/cart/checkout" replace />} />
-                    <Route path="/cart/checkout" element={<Checkout />} />
-                    <Route path="/checkout/success" element={<CheckoutSuccess />} />
-                    <Route path="/checkout/failure" element={<CheckoutFailure />} />
-                    <Route path="/checkout/pending" element={<CheckoutPending />} />
-
-                    {/* Search */}
-                    <Route path="/search" element={<Search />} />
-
-                    {/* Info */}
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
-
-                    {/* Account - públicas */}
-                    <Route path="/account/login" element={<Login />} />
-                    <Route path="/account/register" element={<Register />} />
-                    <Route path="/account/logout" element={<Logout />} />
-                    <Route path="/account/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/account/reset-password/:token" element={<ResetPassword />} />
-
-
-                    {/* Account - protegidas */}
-                    <Route
-                      path="/account/profile"
-                      element={
-                        <ProtectedRoute>
-                          <Profile />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/account/favorites"
-                      element={
-                        <ProtectedRoute>
-                          <Favorites />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/account/change-password"
-                      element={
-                        <ProtectedRoute>
-                          <ChangePassword />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/account/my-purchases"
-                      element={
-                        <ProtectedRoute>
-                          <MyPurchases />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    {/* Admin */}
-                    <Route
-                      path="/admin"
-                      element={
-                        <ProtectedRoute roles={["admin"]}>
-                          <AdminLayout />
-                        </ProtectedRoute>
-                      }
-                    >
-                      <Route path="products" element={<AdminProducts />} />
-                      <Route path="orders" element={<AdminOrders />} />
-                      <Route path="users" element={<AdminUsers />} />
-                      <Route path="create-product" element={<AdminCreateProduct />} />
-                      <Route path="colors" element={<AdminColors />} />
-                      <Route path="keywords" element={<AdminKeywords />} />
-                      <Route path="series" element={<AdminSeries />} />
-                      <Route path="categories" element={<AdminCategories />} />
-                      <Route path="customizations" element={<AdminCustomizations />} />
-                      <Route path="studio" element={<AdminStudio />} />
-                      <Route path="pricing-rules" element={<AdminPricingRules />} />
-                    </Route>
-
-                    {/* 404 */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-
-                {/* Footer */}
-                <Footer />
-              </div>
+              <AppContent />
             </Router>
           </CartProvider>
         </FavoritesProvider>

@@ -8,11 +8,13 @@ import StudioDraftsModal from "./StudioDraftsModal";
 
 const API = import.meta.env.VITE_API_URL;
 
+
 const FORMATS = {
   cover: { label: "COVER ART", width: 500, height: 500, exportWidth: 3000, exportHeight: 3000 },
-  flyer: { label: "FLYER VERTICAL", width: 280, height: 500, exportWidth: 1080, exportHeight: 1920 },
+  flyer: { label: "FLYER (A4)", width: 350, height: 495, exportWidth: 2480, exportHeight: 3508 },
   banner: { label: "BANNER", width: 500, height: 180, exportWidth: 1500, exportHeight: 500 },
 };
+
 
 const FONTS = ["Space Grotesk", "Arial", "Georgia", "Courier New", "Impact"];
 
@@ -82,16 +84,26 @@ function CurvedText({ el, commonProps }) {
 
 export default function StudioEditor({ hasAccess, canSaveDraft, token, studioProduct }) {
   const [format, setFormat] = useState("cover");
+  const [orientation, setOrientation] = useState("vertical");
   const [fields, setFields] = useState({ artist: "", album: "", year: "", extra: "" });
   const [imageUrl, setImageUrl] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [elements, setElements] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const stageRef = useRef(null);
-  const fmt = FORMATS[format];
+  const rawFmt = FORMATS[format];
+  const fmt = orientation === "horizontal"
+    ? { ...rawFmt, width: rawFmt.height, height: rawFmt.width, exportWidth: rawFmt.exportHeight, exportHeight: rawFmt.exportWidth }
+    : rawFmt;
 
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
+  const pendingResourceFiles = useRef({});
+  const canvasContainerRef = useRef(null);
+  const [displayScale, setDisplayScale] = useState(1);
+  const gridRef = useRef(null);
+  const isSpacePressed = useRef(false);
+
 
   // recursos del studio (imágenes) traídos de la API
   const [categories, setCategories] = useState([]);
@@ -145,11 +157,51 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
     return () => window.removeEventListener("keydown", onKey);
   }, [isFullscreen]);
 
+  useEffect(() => {
+    if (!canvasContainerRef.current) return;
+    const el = canvasContainerRef.current;
+    const observer = new ResizeObserver(() => {
+      const availableWidth = el.clientWidth;
+      const availableHeight = window.innerHeight - 220;
+      const scaleByWidth = availableWidth / fmt.width;
+      const scaleByHeight = availableHeight / fmt.height;
+      const scale = Math.min((availableWidth * 0.85) / fmt.width, scaleByHeight, 1.8);
+      console.log({ availableWidth, availableHeight, scaleByWidth, scaleByHeight, scale, fmtWidth: fmt.width, fmtHeight: fmt.height, windowWidth: window.innerWidth, gridWidth: gridRef.current?.clientWidth });
+      setDisplayScale(scale > 0 ? scale : 1);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fmt.width, fmt.height]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    // Espera un frame para que el panel de controles ya esté renderizado en el DOM
+    // antes de calcular cuánto hay que scrollear.
+    const timer = setTimeout(() => {
+      const panel = document.getElementById("layer-controls-panel");
+      if (panel) {
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [selectedId]);
+
+  useEffect(() => {
+    const onKeyDown = (e) => { if (e.code === "Space") isSpacePressed.current = true; };
+    const onKeyUp = (e) => { if (e.code === "Space") isSpacePressed.current = false; };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
+
   const isPanning = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
 
   const handleStageMouseDown = (e) => {
-    if (e.target === e.target.getStage()) {
+    if (e.target === e.target.getStage() && isSpacePressed.current) {
       isPanning.current = true;
       lastPointer.current = e.target.getStage().getPointerPosition();
     }
@@ -280,6 +332,53 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
     ]);
   };
 
+  const addOwnResourceToCanvas = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const size = 100;
+    const id = `own-resource-${Date.now()}`;
+    pendingResourceFiles.current[id] = file;
+    setElements(prev => [
+      ...prev,
+      {
+        id,
+        type: "resource",
+        src: URL.createObjectURL(file),
+        x: fmt.width / 2 - size / 2,
+        y: fmt.height / 2 - size / 2,
+        width: size,
+        height: size,
+        rotation: 0,
+        opacity: 1,
+      },
+    ]);
+    e.target.value = ""; // permite volver a elegir el mismo archivo dos veces seguidas
+  };
+
+  const resolvePendingResources = async () => {
+    const entries = Object.entries(pendingResourceFiles.current);
+    if (entries.length === 0) return elements;
+
+    const uploads = await Promise.all(entries.map(async ([elId, file]) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch(`${API}/studio/user-resources`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      return [elId, data.data?.url];
+    }));
+
+    const urlMap = Object.fromEntries(uploads);
+    const resolved = elements.map(el => urlMap[el.id] ? { ...el, src: urlMap[el.id] } : el);
+
+    setElements(resolved);
+    pendingResourceFiles.current = {};
+    return resolved;
+  };
+
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -372,10 +471,10 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
     <div style={{ fontFamily: "Space Grotesk" }}>
 
       {/* Controles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <div ref={gridRef} className="flex flex-col md:flex-row items-start gap-12 mb-8 pt-6">
 
         {/* Izquierda — configuración */}
-        <div className="space-y-4">
+        <div className="space-y-4 w-full md:w-[480px] flex-shrink-0">
 
           {/* Formato */}
           <div>
@@ -392,6 +491,30 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
                   {val.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs uppercase tracking-widest block mb-2" style={{ color: "var(--color-text-muted)" }}>Orientación</label>
+            <div className="flex gap-2">
+              <button onClick={() => setOrientation("vertical")}
+                className="px-3 py-1 text-xs uppercase tracking-widest transition-all"
+                style={{
+                  background: orientation === "vertical" ? "var(--color-accent)" : "transparent",
+                  color: orientation === "vertical" ? "var(--color-text)" : "var(--color-text-muted)",
+                  border: `1px solid ${orientation === "vertical" ? "var(--color-accent)" : "var(--color-text-muted)"}`,
+                }}>
+                ↕ VERTICAL
+              </button>
+              <button onClick={() => setOrientation("horizontal")}
+                className="px-3 py-1 text-xs uppercase tracking-widest transition-all"
+                style={{
+                  background: orientation === "horizontal" ? "var(--color-accent)" : "transparent",
+                  color: orientation === "horizontal" ? "var(--color-text)" : "var(--color-text-muted)",
+                  border: `1px solid ${orientation === "horizontal" ? "var(--color-accent)" : "var(--color-text-muted)"}`,
+                }}>
+                ↔ HORIZONTAL
+              </button>
             </div>
           </div>
 
@@ -448,6 +571,12 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
                 💾 Mis borradores
               </button>
             )}
+
+            <label className="px-4 py-2 text-xs uppercase tracking-widest cursor-pointer"
+              style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+              🖼️ Subir mi recurso
+              <input type="file" accept="image/*" onChange={addOwnResourceToCanvas} className="hidden" />
+            </label>
           </div>
 
           {/* Botones */}
@@ -481,7 +610,7 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
 
           {/* Capas */}
           {selectedId && (
-            <div className="pt-4 space-y-2">
+            <div id="layer-controls-panel" className="pt-4 space-y-2">
               <label className="text-xs uppercase tracking-widest block" style={{ color: "var(--color-text-muted)" }}>Capa seleccionada</label>
               <div className="flex gap-2">
                 <button onClick={() => moveElement(selectedId, "up")}
@@ -524,12 +653,12 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
         </div>
 
         {/* Derecha — canvas */}
-        <div style={{ position: "sticky", top: "12rem", alignSelf: "start" }}>
-          <label className="text-xs uppercase tracking-widest block mb-2" style={{ color: "var(--color-text-muted)" }}>
+        <div className="w-full" style={{ position: "sticky", top: "1.5rem", minWidth: 0 }}>
+          <label className="text-xs uppercase tracking-widest block mb-2 text-center" style={{ color: "var(--color-text-muted)" }}>
             PREVIEW — {fmt.exportWidth}×{fmt.exportHeight}px
           </label>
 
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
             <button onClick={zoomOut} className="px-3 py-1 text-xs uppercase tracking-widest"
               style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
               −
@@ -551,94 +680,109 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
             </button>
           </div>
 
-          <div style={{ border: "1px solid var(--color-text-muted)", width: fmt.width, height: fmt.height, overflow: "hidden", cursor: "grab" }}>
-            <Stage ref={stageRef} width={fmt.width} height={fmt.height}
-              scaleX={zoom} scaleY={zoom} onWheel={handleWheel}
-              x={stagePos.x} y={stagePos.y}
-              onMouseDown={handleStageMouseDown}
-              onMouseMove={handleStageMouseMove}
-              onMouseUp={handleStageMouseUp}
-              onMouseLeave={handleStageMouseUp}
-              onClick={() => setSelectedId(null)}>
-              <Layer ref={layerRef}>
-                {imageUrl && <UploadedImage src={imageUrl} width={fmt.width} height={fmt.height} />}
-                {elements.map(el => {
-                  const isSelected = el.id === selectedId;
-                  const commonProps = {
-                    key: el.id,
-                    id: el.id,
-                    onClick: (e) => { e.cancelBubble = true; setSelectedId(el.id); },
-                    draggable: true,
-                    onDragEnd: (e) => {
-                      setElements(prev => prev.map(item =>
-                        item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item
-                      ));
-                    },
-                    onTransformEnd: (e) => {
-                      const node = e.target;
-                      const scaleX = node.scaleX();
-                      const scaleY = node.scaleY();
-                      node.scaleX(1);
-                      node.scaleY(1);
-                      setElements(prev => prev.map(item => {
-                        if (item.id !== el.id) return item;
-                        if (item.type === "circle") {
-                          return { ...item, x: node.x(), y: node.y(), radius: Math.max(5, item.radius * scaleX), rotation: node.rotation() };
-                        }
-                        if (item.type === "text") {
-                          return { ...item, x: node.x(), y: node.y(), fontSize: Math.max(6, item.fontSize * scaleY), rotation: node.rotation() };
-                        }
-                        return {
-                          ...item,
-                          x: node.x(),
-                          y: node.y(),
-                          width: Math.max(10, item.width * scaleX),
-                          height: Math.max(10, item.height * scaleY),
-                          rotation: node.rotation(),
-                        };
-                      }));
-                    },
-                    opacity: el.opacity,
-                    rotation: el.rotation,
-                    stroke: isSelected ? "white" : el.stroke,
-                    strokeWidth: isSelected ? 2 : el.strokeWidth,
-                  };
-                  if (el.type === "text") {
-                    if (el.curved) return <CurvedText key={el.id} el={el} commonProps={commonProps} />;
-                    return (
-                      <Text {...commonProps} x={el.x} y={el.y} text={el.text} fontSize={el.fontSize}
-                        fontFamily={el.fontFamily} fontStyle={el.fontStyle || "normal"}
-                        align={el.align || "left"} lineHeight={el.lineHeight ?? 1}
-                        letterSpacing={el.letterSpacing ?? 0}
-                        fill={isSelected ? "white" : el.fill} />
-                    );
-                  }
-                  if (el.type === "rect") return (
-                    <Rect {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height} fill={el.fill} />
-                  );
-                  if (el.type === "circle") return (
-                    <Circle {...commonProps} x={el.x} y={el.y} radius={el.radius} fill={el.fill} />
-                  );
-                  if (el.type === "line") return (
-                    <Line {...commonProps} x={el.x} y={el.y} points={el.points} />
-                  );
-                  if (el.type === "resource") return (
-                    <ResourceImage {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height} src={el.src} />
-                  );
-                  return null;
-                })}
-                <Transformer
-                  ref={transformerRef}
-                  rotateEnabled={true}
-                  boundBoxFunc={(oldBox, newBox) => {
-                    if (newBox.width < 10 || newBox.height < 10) return oldBox;
-                    return newBox;
-                  }}
-                />
-              </Layer>
-            </Stage>
+          <p className="text-center text-[10px] uppercase tracking-widest mb-2" style={{ color: "var(--color-text-muted)", opacity: 0.6 }}>
+            Mantené ESPACIO + arrastrá para mover la vista
+          </p>
+
+          <div ref={canvasContainerRef} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+            <div style={{
+              width: fmt.width * displayScale,
+              height: fmt.height * displayScale,
+              border: "1px solid var(--color-text-muted)",
+              overflow: "hidden",
+            }}>
+              <div style={{ transform: `scale(${displayScale})`, transformOrigin: "top left", width: fmt.width, height: fmt.height, cursor: "grab" }}>
+                <Stage ref={stageRef} width={fmt.width} height={fmt.height}
+                  scaleX={zoom} scaleY={zoom} onWheel={handleWheel}
+                  x={stagePos.x} y={stagePos.y}
+                  onMouseDown={handleStageMouseDown}
+                  onMouseMove={handleStageMouseMove}
+                  onMouseUp={handleStageMouseUp}
+                  onMouseLeave={handleStageMouseUp}
+                  onClick={() => setSelectedId(null)}>
+                  <Layer ref={layerRef}>
+                    {imageUrl && <UploadedImage src={imageUrl} width={fmt.width} height={fmt.height} />}
+                    {elements.map(el => {
+                      const isSelected = el.id === selectedId;
+                      const commonProps = {
+                        key: el.id,
+                        id: el.id,
+                        onClick: (e) => { e.cancelBubble = true; setSelectedId(el.id); },
+                        draggable: true,
+                        onDragEnd: (e) => {
+                          setElements(prev => prev.map(item =>
+                            item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item
+                          ));
+                        },
+                        onTransformEnd: (e) => {
+                          const node = e.target;
+                          const scaleX = node.scaleX();
+                          const scaleY = node.scaleY();
+                          node.scaleX(1);
+                          node.scaleY(1);
+                          setElements(prev => prev.map(item => {
+                            if (item.id !== el.id) return item;
+                            if (item.type === "circle") {
+                              return { ...item, x: node.x(), y: node.y(), radius: Math.max(5, item.radius * scaleX), rotation: node.rotation() };
+                            }
+                            if (item.type === "text") {
+                              return { ...item, x: node.x(), y: node.y(), fontSize: Math.max(6, item.fontSize * scaleY), rotation: node.rotation() };
+                            }
+                            return {
+                              ...item,
+                              x: node.x(),
+                              y: node.y(),
+                              width: Math.max(10, item.width * scaleX),
+                              height: Math.max(10, item.height * scaleY),
+                              rotation: node.rotation(),
+                            };
+                          }));
+                        },
+                        opacity: el.opacity,
+                        rotation: el.rotation,
+                        stroke: isSelected ? "white" : el.stroke,
+                        strokeWidth: isSelected ? 2 : el.strokeWidth,
+                      };
+                      if (el.type === "text") {
+                        if (el.curved) return <CurvedText key={el.id} el={el} commonProps={commonProps} />;
+                        return (
+                          <Text {...commonProps} x={el.x} y={el.y} text={el.text} fontSize={el.fontSize}
+                            fontFamily={el.fontFamily} fontStyle={el.fontStyle || "normal"}
+                            align={el.align || "left"} lineHeight={el.lineHeight ?? 1}
+                            letterSpacing={el.letterSpacing ?? 0}
+                            fill={isSelected ? "white" : el.fill} />
+                        );
+                      }
+                      if (el.type === "rect") return (
+                        <Rect {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height} fill={el.fill} />
+                      );
+                      if (el.type === "circle") return (
+                        <Circle {...commonProps} x={el.x} y={el.y} radius={el.radius} fill={el.fill} />
+                      );
+                      if (el.type === "line") return (
+                        <Line {...commonProps} x={el.x} y={el.y} points={el.points} />
+                      );
+                      if (el.type === "resource") return (
+                        <ResourceImage {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height} src={el.src} />
+                      );
+                      return null;
+                    })}
+                    <Transformer
+                      ref={transformerRef}
+                      rotateEnabled={true}
+                      boundBoxFunc={(oldBox, newBox) => {
+                        if (newBox.width < 10 || newBox.height < 10) return oldBox;
+                        return newBox;
+                      }}
+                    />
+                  </Layer>
+                </Stage>
+              </div>
+            </div>
           </div>
         </div>
+
+
       </div>
 
       <StudioResourceModal
@@ -663,6 +807,7 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
           imageFile={imageFile}
           idProduct={backgroundProductId}
           onLoadDraft={loadDraft}
+          resolvePendingResources={resolvePendingResources}
         />
       )}
 

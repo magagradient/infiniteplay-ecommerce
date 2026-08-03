@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const API = import.meta.env.VITE_API_URL;
 
 export default function StudioDraftsModal({
-  isOpen, onClose, token, format, elements, imageUrl, imageFile, idProduct, onLoadDraft,
+  isOpen, onClose, token, format, elements, imageUrl, imageFile, idProduct, onLoadDraft, resolvePendingResources,
 }) {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,8 @@ export default function StudioDraftsModal({
       const formData = new FormData();
       formData.append("name", nameInput.trim());
       formData.append("format", format);
-      formData.append("elements", JSON.stringify(elements));
+      const resolvedElements = await resolvePendingResources();
+      formData.append("elements", JSON.stringify(resolvedElements));
       if (imageFile) {
         formData.append("image", imageFile);
       } else if (imageUrl && !imageUrl.startsWith("blob:")) {

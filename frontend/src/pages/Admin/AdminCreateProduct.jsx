@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
+import { getPricingRules } from "../../services/pricingRules/pricingRulesService";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -67,6 +68,10 @@ export default function AdminCreateProduct() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
+  const [pricingRules, setPricingRules] = useState([]);
+  const [priceTouched, setPriceTouched] = useState(false);
+  const [suggestedPrice, setSuggestedPrice] = useState(null);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -90,9 +95,38 @@ export default function AdminCreateProduct() {
     fetch(`${API}/series`).then(r => r.json()).then(d => setSeriesList(d.data || []));
     fetch(`${API}/colors`).then(r => r.json()).then(d => setColorsList(d.data || []));
     fetch(`${API}/keywords`).then(r => r.json()).then(d => setKeywordsList(d.data || []));
+    getPricingRules(token).then(setPricingRules).catch(err => console.error("Error al cargar pricing rules:", err)); // ← esta línea es nueva
   }, []);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => {
+    if (!form.id_category || !form.artwork_level || !pricingRules.length) {
+      setSuggestedPrice(null);
+      return;
+    }
+
+    const rule = pricingRules.find(
+      (r) =>
+        r.id_category === parseInt(form.id_category) &&
+        r.artwork_level === form.artwork_level &&
+        r.is_active
+    );
+
+    if (!rule) {
+      setSuggestedPrice(null);
+      return;
+    }
+
+    setSuggestedPrice(rule.suggested_price);
+
+    if (!priceTouched) {
+      setForm((prev) => ({ ...prev, price: rule.suggested_price }));
+    }
+  }, [form.id_category, form.artwork_level, pricingRules]);
+
+  const handleChange = (e) => {
+    if (e.target.name === "price") setPriceTouched(true);
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleImage = (e) => {
     const file = e.target.files[0];
@@ -205,11 +239,16 @@ export default function AdminCreateProduct() {
           <textarea name="description_long" value={form.description_long} onChange={handleChange} rows={5} placeholder="Descripción detallada..."
             style={{ ...inputStyle, resize: "none" }} onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"} onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"} />
         </div>
-
         <div>
+
           <label style={labelStyle}>Precio (USD) *</label>
           <input name="price" type="number" value={form.price} onChange={handleChange} placeholder="15.00"
             style={inputStyle} onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"} onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"} />
+          {suggestedPrice !== null && (
+            <p className="text-[10px] uppercase tracking-widest mt-1" style={{ color: "var(--color-accent-secondary)" }}>
+              Sugerido: {suggestedPrice} USD {priceTouched && "— editado manualmente"}
+            </p>
+          )}
         </div>
 
         <div>

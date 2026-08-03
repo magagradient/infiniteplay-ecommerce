@@ -19,9 +19,14 @@ const deleteTechnicalDetail = require("../controllers/admin/technicalDetails/del
 const createIncludedResource = require("../controllers/admin/includedResources/createIncludedResource");
 const updateIncludedResource = require("../controllers/admin/includedResources/updateIncludedResource");
 const deleteIncludedResource = require("../controllers/admin/includedResources/deleteIncludedResource");
+const createPricingRulesForCategory = require("../controllers/admin/pricingRules/createPricingRulesForCategory");
+const createProductContent = require("../controllers/admin/productContents/createProductContent");
+const getProductContents = require("../controllers/admin/productContents/getProductContents");
+const updateProductContent = require("../controllers/admin/productContents/updateProductContent");
+const deleteProductContent = require("../controllers/admin/productContents/deleteProductContent");
 
 
-// todas las rutas de admin requieren rol 'admin'
+// Rutas
 router.get("/products", authMiddleware(["admin"]), getProducts);
 router.put("/products/:id", authMiddleware(["admin"]), updateProduct);
 router.delete("/products/:id", authMiddleware(["admin"]), deleteProduct);
@@ -33,10 +38,15 @@ router.put("/pricing-rules/:id", authMiddleware(["admin"]), updatePricingRule);
 router.get("/customizations/pending", authMiddleware(["admin"]), getPendingCustomizations);
 router.patch("/customizations/:id_order/:id_product/complete", authMiddleware(["admin"]), completeCustomization);
 router.post("/products/:id/technical-details", authMiddleware(["admin"]), createTechnicalDetail);
+router.post("/pricing-rules/category/:id_category", authMiddleware(["admin"]), createPricingRulesForCategory);
 router.put("/technical-details/:id_detail", authMiddleware(["admin"]), updateTechnicalDetail);
 router.delete("/technical-details/:id_detail", authMiddleware(["admin"]), deleteTechnicalDetail);
 router.post("/products/:id/included-resources", authMiddleware(["admin"]), createIncludedResource);
 router.put("/included-resources/:id_resource", authMiddleware(["admin"]), updateIncludedResource);
 router.delete("/included-resources/:id_resource", authMiddleware(["admin"]), deleteIncludedResource);
+router.post("/products/:id/contents",authMiddleware(["admin"]),createProductContent);
+router.get("/products/:id/contents",authMiddleware(["admin"]),getProductContents);
+router.put("/product-contents/:id_product_content",authMiddleware(["admin"]),updateProductContent);
+router.delete("/product-contents/:id_product_content",authMiddleware(["admin"]),deleteProductContent);
 
 module.exports = router;

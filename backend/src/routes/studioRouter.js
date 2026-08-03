@@ -19,6 +19,7 @@ const uploadStudioResource = require("../middlewares/uploadStudioResource");
 
 const listDrafts = require("../controllers/studio/drafts/index");
 const createDraft = require("../controllers/studio/drafts/create");
+const uploadUserResource = require("../controllers/studio/drafts/uploadUserResource");
 const destroyDraft = require("../controllers/studio/drafts/destroy");
 
 
@@ -42,6 +43,7 @@ router.delete("/fonts/:id", authMiddleware(["admin"]), destroyFont);
 /* ---------- Drafts ---------- */
 router.get("/drafts", listDrafts);
 router.post("/drafts", authMiddleware(), uploadStudioResource.single("image"), createDraft);
+router.post("/user-resources", authMiddleware(), uploadStudioResource.single("image"), uploadUserResource);
 router.delete("/drafts/:id", authMiddleware(), destroyDraft);
 
 module.exports = router;
