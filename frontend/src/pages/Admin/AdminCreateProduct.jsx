@@ -71,6 +71,9 @@ export default function AdminCreateProduct() {
   const [pricingRules, setPricingRules] = useState([]);
   const [priceTouched, setPriceTouched] = useState(false);
   const [suggestedPrice, setSuggestedPrice] = useState(null);
+  const [productContents, setProductContents] = useState([]);
+  const [selectedContentCategory, setSelectedContentCategory] = useState(null);
+  const [contentQuantity, setContentQuantity] = useState(1);
 
   const [form, setForm] = useState({
     title: "",
@@ -175,6 +178,23 @@ export default function AdminCreateProduct() {
       }
       await assignRelation(newProductId, "colors", selectedColors.map(c => c.value));
       await assignRelation(newProductId, "keywords", selectedKeywords.map(k => k.value));
+
+      if (productContents.length > 0) {
+        for (const item of productContents) {
+          await fetch(`${API}/admin/products/${newProductId}/contents`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              id_category: item.id_category,
+              quantity: item.quantity,
+            }),
+          });
+        }
+      }
+
       setSuccess(true);
       setTimeout(() => navigate("/admin/products"), 1500);
     } catch (err) {
@@ -194,6 +214,53 @@ export default function AdminCreateProduct() {
     fontSize: "14px",
     outline: "none",
   };
+
+  const handleAddContent = () => {
+    if (!selectedContentCategory) return;
+
+    const exists = productContents.some(
+      (item) => item.id_category === selectedContentCategory.value
+    );
+
+    if (exists) {
+      alert("Esta categoría ya fue agregada al pack.");
+      return;
+    }
+
+
+    setProductContents((prev) => [
+      ...prev,
+      {
+        id_category: selectedContentCategory.value,
+        name: selectedContentCategory.label,
+        quantity: Number(contentQuantity),
+      },
+    ]);
+
+    setSelectedContentCategory(null);
+    setContentQuantity(1);
+  };
+
+  const handleRemoveContent = (idCategory) => {
+    console.log("Eliminar:", idCategory);
+    setProductContents((prev) =>
+      prev.filter((item) => item.id_category !== idCategory)
+    );
+  };
+
+  const handleUpdateContentQuantity = (idCategory, quantity) => {
+    setProductContents((prev) =>
+      prev.map((item) =>
+        item.id_category === idCategory
+          ? {
+              ...item,
+              quantity,
+            }
+          : item
+      )
+    );
+  };
+
 
   return (
     <div style={{ fontFamily: "Space Grotesk" }}>
@@ -283,6 +350,117 @@ export default function AdminCreateProduct() {
           <label style={labelStyle}>Categoría *</label>
           <Select options={categories.map(c => ({ value: c.id_category, label: c.name }))} onChange={opt => setForm({ ...form, id_category: opt ? opt.value : "" })} placeholder="-- Seleccionar --" isClearable styles={selectStyles} />
         </div>
+
+        <div className="pt-2" style={{ borderTop: "1px solid var(--color-text-muted)" }}>
+          <label style={labelStyle}>Pack</label>
+
+          <div className="grid grid-cols-[1fr_120px_auto] gap-3 items-end">
+
+            <div>
+              <label style={labelStyle}>Categoría</label>
+              <Select
+                options={categories.map(c => ({
+                  value: c.id_category,
+                  label: c.name,
+                }))}
+                value={selectedContentCategory}
+                onChange={setSelectedContentCategory}
+                placeholder="Seleccionar..."
+                styles={selectStyles}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Cantidad</label>
+              <input
+                type="number"
+                min="1"
+                value={contentQuantity}
+                onChange={(e) => setContentQuantity(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAddContent}
+              className="px-4 py-2 text-xs font-bold uppercase tracking-widest"
+              style={{
+                background: "var(--color-accent)",
+                color: "var(--color-text)",
+              }}
+            >
+              Agregar
+            </button>
+
+          </div>
+        </div>
+
+        {productContents.length > 0 && (
+          <div className="mt-5">
+
+            <label style={labelStyle}>
+              Contenido del Pack
+            </label>
+
+            <div
+              style={{
+                border: "1px solid var(--color-text-muted)",
+              }}
+            >
+              {productContents.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center px-4 py-3"
+                  style={{
+                    borderBottom:
+                      index !== productContents.length - 1
+                        ? "1px solid var(--color-text-muted)"
+                        : "none",
+                  }}
+                >
+                  <span style={{ color: "var(--color-text)" }}>
+                    {item.name}
+                  </span>
+
+                  <div className="flex items-center gap-4">
+
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleUpdateContentQuantity(
+                          item.id_category,
+                          Number(e.target.value)
+                        )
+                      }
+                      style={{
+                        width: "70px",
+                        ...inputStyle,
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveContent(item.id_category)}
+                      style={{
+                        color: "var(--color-error)",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      🗑
+                    </button>
+
+                    
+
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
 
         <div>
           <label style={labelStyle}>Serie</label>

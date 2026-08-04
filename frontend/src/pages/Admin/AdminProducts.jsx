@@ -155,42 +155,94 @@ export default function AdminProducts() {
 
   const addResource = async (id_product) => {
     if (!newResource.id_category) return;
+
     setResourceSubmitting(true);
+
     try {
-      const res = await fetch(`${API}/admin/products/${id_product}/included-resources`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id_category: parseInt(newResource.id_category), quantity: parseInt(newResource.quantity) || 1 }),
-      });
+      const res = await fetch(
+        `${API}/admin/products/${id_product}/contents`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            id_category: parseInt(newResource.id_category),
+            quantity: parseInt(newResource.quantity) || 1,
+          }),
+        }
+      );
+
       const data = await res.json();
+
       if (data.status === "success") {
-        setProducts((prev) => prev.map((p) =>
-          p.id_product === id_product
-            ? { ...p, includedResources: [...(p.includedResources || []), data.data] }
-            : p
-        ));
-        setNewResource({ id_category: "", quantity: 1 });
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id_product === id_product
+              ? {
+                ...p,
+                productContents: [
+                  ...(p.productContents || []),
+                  data.data,
+                ],
+              }
+              : p
+          )
+        );
+
+        setNewResource({
+          id_category: "",
+          quantity: 1,
+        });
       }
     } catch (err) {
-      console.error("Error al agregar recurso incluido:", err);
+      console.error(err);
     } finally {
       setResourceSubmitting(false);
     }
   };
 
-  const updateResourceQuantity = async (id_product, id_resource, quantity) => {
-    const res = await fetch(`${API}/admin/included-resources/${id_resource}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ quantity: parseInt(quantity) || 1 }),
-    });
-    const data = await res.json();
-    if (data.status === "success") {
-      setProducts((prev) => prev.map((p) =>
-        p.id_product === id_product
-          ? { ...p, includedResources: p.includedResources.map((r) => r.id_resource === id_resource ? data.data : r) }
-          : p
-      ));
+  const updateResourceQuantity = async (
+    id_product,
+    id_product_content,
+    quantity
+  ) => {
+    try {
+      const res = await fetch(
+        `${API}/admin/product-contents/${id_product_content}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            quantity: parseInt(quantity) || 1,
+          }),
+        }
+      );
+  
+      const data = await res.json();
+  
+      if (data.status === "success") {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id_product === id_product
+              ? {
+                  ...p,
+                  productContents: (p.productContents || []).map((item) =>
+                    item.id_product_content === id_product_content
+                      ? data.data
+                      : item
+                  ),
+                }
+              : p
+          )
+        );
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 

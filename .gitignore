@@ -1,6 +1,7 @@
 # === Sistema / OS ===
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # === Node modules ===
 **/node_modules/
@@ -11,7 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-logs
+logs/
 *.log
 
 # === Environment / Variables de entorno ===
@@ -25,12 +26,14 @@ logs
 # === Backend ===
 config/config.js
 
-# === Frontend (Vite) ===
-frontend/build/
-frontend/coverage/
-frontend/.pnp
-frontend/.pnp.js
+# === Build ===
+**/dist/
+**/build/
+**/coverage/
 dist-ssr
+
+# === Cache ===
+.cache/
 
 # === Editores / IDEs ===
 .vscode/*
@@ -42,3 +45,6 @@ dist-ssr
 *.sln
 *.sw?
 
+# === Temporales ===
+*.tmp
+*.temp

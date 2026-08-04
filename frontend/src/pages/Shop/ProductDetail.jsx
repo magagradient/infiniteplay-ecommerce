@@ -37,6 +37,7 @@ export default function ProductDetail() {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [mainWatermark, setMainWatermark] = useState(null);
   const { formatPrice } = useLocation();
+  const [labMenuOpen, setLabMenuOpen] = useState(false);
 
 
   useEffect(() => {
@@ -249,13 +250,49 @@ export default function ProductDetail() {
             <span className="material-symbols-outlined">add_shopping_cart</span>
             AGREGAR_AL_CARRITO
           </button>
-          <button
-            onClick={() => navigate(`/lab?product=${product.id_product}`)}
-            className="w-full py-4 px-8 border border-accent-secondary text-accent-secondary font-bold uppercase tracking-widest hover:bg-accent-secondary hover:text-bg-dark transition-all flex items-center justify-center gap-2"
-          >
-            <span className="material-symbols-outlined">edit</span>
-            PROBAR_EN_EL_LAB
-          </button>
+
+          {(() => {
+            const labImages = product.images?.filter(i => i.image_type === "cover" || i.image_type === "banner") || [];
+            if (labImages.length === 0) return null;
+
+            if (labImages.length === 1) {
+              const img = labImages[0];
+              return (
+                <button
+                  onClick={() => navigate(`/lab?product=${product.id_product}&image=${img.id_image}&format=${img.image_type}`)}
+                  className="w-full py-4 px-8 border border-accent-secondary text-accent-secondary font-bold uppercase tracking-widest hover:bg-accent-secondary hover:text-bg-dark transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">edit</span>
+                  PROBAR_EN_EL_LAB
+                </button>
+              );
+            }
+
+            return (
+              <div className="relative">
+                <button
+                  onClick={() => setLabMenuOpen(o => !o)}
+                  className="w-full py-4 px-8 border border-accent-secondary text-accent-secondary font-bold uppercase tracking-widest hover:bg-accent-secondary hover:text-bg-dark transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">edit</span>
+                  PROBAR_EN_EL_LAB
+                </button>
+                {labMenuOpen && (
+                  <div className="absolute left-0 right-0 mt-1 border border-accent-secondary bg-bg-dark z-10 max-h-64 overflow-y-auto">
+                    {labImages.map((img, i) => (
+                      <button key={img.id_image}
+                        onClick={() => navigate(`/lab?product=${product.id_product}&image=${img.id_image}&format=${img.image_type}`)}
+                        className="w-full py-2 px-4 flex items-center gap-3 text-left text-xs uppercase tracking-widest text-text-muted hover:text-accent-secondary hover:bg-bg-light transition-all"
+                      >
+                        <img src={img.watermark_url || img.image_url} alt="" className="w-10 h-10 object-cover border border-text-muted/30" />
+                        {img.image_type === "cover" ? "Cover" : "Banner"} {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 

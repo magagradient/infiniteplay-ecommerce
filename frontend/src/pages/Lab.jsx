@@ -11,7 +11,9 @@ export default function Lab() {
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const productId = searchParams.get("product");
+  const initialFormat = searchParams.get("format") || "cover";
   const [studioProduct, setStudioProduct] = useState(null);
+  const imageId = searchParams.get("image");
 
   useEffect(() => {
     if (!token) { setLoading(false); return; }
@@ -84,7 +86,7 @@ export default function Lab() {
             </div>
           )}
 
-          <StudioEditor hasAccess={!!access?.hasAccess} canSaveDraft={!!user} token={token} studioProduct={studioProduct} />
+          <StudioEditor hasAccess={!!access?.hasAccess} canSaveDraft={!!user} token={token} studioProduct={studioProduct} initialFormat={initialFormat} initialImageId={imageId} />
         </>
       )}
     </section>

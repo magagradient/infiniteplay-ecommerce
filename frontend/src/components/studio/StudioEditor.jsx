@@ -82,20 +82,21 @@ function CurvedText({ el, commonProps }) {
   return <Group {...commonProps} x={el.x} y={el.y}>{letters}</Group>;
 }
 
-export default function StudioEditor({ hasAccess, canSaveDraft, token, studioProduct }) {
-  const [format, setFormat] = useState("cover");
+export default function StudioEditor({ hasAccess, canSaveDraft, token, studioProduct, initialFormat, initialImageId }) {
+  const [format, setFormat] = useState(initialFormat || "cover");
   const [orientation, setOrientation] = useState("vertical");
   const [fields, setFields] = useState({ artist: "", album: "", year: "", extra: "" });
   const [imageUrl, setImageUrl] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [elements, setElements] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+
+
   const stageRef = useRef(null);
   const rawFmt = FORMATS[format];
   const fmt = orientation === "horizontal"
     ? { ...rawFmt, width: rawFmt.height, height: rawFmt.width, exportWidth: rawFmt.exportHeight, exportHeight: rawFmt.exportWidth }
     : rawFmt;
-
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
   const pendingResourceFiles = useRef({});
@@ -269,15 +270,21 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
 
   useEffect(() => {
     if (!studioProduct) return;
-    const cover = studioProduct.images?.find(img => img.image_type === "cover");
-    const watermarked = cover?.watermark_url || cover?.image_url;
+    let img = null;
+    if (initialImageId) {
+      img = studioProduct.images?.find(i => String(i.id_image) === String(initialImageId));
+    }
+    if (!img) {
+      const targetType = ["cover", "banner"].includes(initialFormat) ? initialFormat : "cover";
+      img = studioProduct.images?.find(i => i.image_type === targetType);
+    }
+    const watermarked = img?.watermark_url || img?.image_url;
     if (watermarked) {
       setImageUrl(watermarked);
       setImageFile(null);
       setBackgroundProductId(studioProduct.id_product);
     }
   }, [studioProduct]);
-
 
   const addTextToCanvas = (key) => {
     const text = fields[key];
@@ -480,17 +487,23 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
           <div>
             <label className="text-xs uppercase tracking-widest block mb-2" style={{ color: "var(--color-text-muted)" }}>Formato</label>
             <div className="flex gap-2 flex-wrap">
-              {Object.entries(FORMATS).map(([key, val]) => (
-                <button key={key} onClick={() => setFormat(key)}
-                  className="px-3 py-1 text-xs uppercase tracking-widest transition-all"
-                  style={{
-                    background: format === key ? "var(--color-accent)" : "transparent",
-                    color: format === key ? "var(--color-text)" : "var(--color-text-muted)",
-                    border: `1px solid ${format === key ? "var(--color-accent)" : "var(--color-text-muted)"}`,
-                  }}>
-                  {val.label}
-                </button>
-              ))}
+              {Object.entries(FORMATS).map(([key, val]) => {
+                const locked = backgroundProductId && key !== format;
+                return (
+                  <button key={key} disabled={locked} onClick={() => !locked && setFormat(key)}
+                    title={locked ? "Este producto viene en un formato específico. Subí tu propia imagen para probar otros formatos." : undefined}
+                    className="px-3 py-1 text-xs uppercase tracking-widest transition-all"
+                    style={{
+                      background: format === key ? "var(--color-accent)" : "transparent",
+                      color: format === key ? "var(--color-text)" : "var(--color-text-muted)",
+                      border: `1px solid ${format === key ? "var(--color-accent)" : "var(--color-text-muted)"}`,
+                      opacity: locked ? 0.35 : 1,
+                      cursor: locked ? "not-allowed" : "pointer",
+                    }}>
+                    {val.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -781,7 +794,6 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
             </div>
           </div>
         </div>
-
 
       </div>
 
