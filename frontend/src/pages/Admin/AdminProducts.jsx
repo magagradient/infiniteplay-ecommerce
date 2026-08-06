@@ -222,21 +222,21 @@ export default function AdminProducts() {
           }),
         }
       );
-  
+
       const data = await res.json();
-  
+
       if (data.status === "success") {
         setProducts((prev) =>
           prev.map((p) =>
             p.id_product === id_product
               ? {
-                  ...p,
-                  productContents: (p.productContents || []).map((item) =>
-                    item.id_product_content === id_product_content
-                      ? data.data
-                      : item
-                  ),
-                }
+                ...p,
+                productContents: (p.productContents || []).map((item) =>
+                  item.id_product_content === id_product_content
+                    ? data.data
+                    : item
+                ),
+              }
               : p
           )
         );
@@ -565,22 +565,33 @@ export default function AdminProducts() {
                         <div className="flex-1 h-px" style={{ background: "var(--color-text-muted)" }} />
                       </div>
 
-                      {(p.includedResources || []).length > 0 && (
+                      {(p.productContents || []).length > 0 && (
                         <div className="space-y-2 mb-4">
-                          {p.includedResources.map((res) => (
-                            <div key={res.id_resource} className="flex items-center justify-between px-3 py-2" style={{ background: "var(--color-bg-dark)", border: "1px solid var(--color-text-muted)" }}>
-                              <span className="text-[10px] uppercase" style={{ color: "var(--color-text)" }}>{res.category?.name}</span>
+                          {p.productContents.map((content) => (
+                            <div key={content.id_product_content} className="flex items-center justify-between px-3 py-2" style={{ background: "var(--color-bg-dark)", border: "1px solid var(--color-text-muted)" }}>
+                              <span className="text-[10px] uppercase" style={{ color: "var(--color-text)" }}>{content.category?.name}</span>
                               <div className="flex items-center gap-3">
                                 <input
                                   type="number"
                                   min="1"
-                                  defaultValue={res.quantity}
-                                  onBlur={(e) => updateResourceQuantity(p.id_product, res.id_resource, e.target.value)}
+                                  defaultValue={content.quantity}
+                                  onBlur={(e) =>
+                                    updateResourceQuantity(
+                                      p.id_product,
+                                      content.id_product_content,
+                                      e.target.value
+                                    )
+                                  }
                                   className="w-14 px-2 py-1 text-[10px] outline-none text-center"
                                   style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-text-muted)", color: "var(--color-text)" }}
                                 />
                                 <button
-                                  onClick={() => removeResource(p.id_product, res.id_resource)}
+                                  onClick={() =>
+                                    removeResource(
+                                      p.id_product,
+                                      content.id_product_content
+                                    )
+                                  }
                                   className="text-[10px] transition-colors"
                                   style={{ color: "var(--color-text-muted)" }}
                                   onMouseEnter={e => e.currentTarget.style.color = "var(--color-accent)"}

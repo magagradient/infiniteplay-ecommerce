@@ -7,9 +7,28 @@ const CartContext = createContext();
 export function CartProvider({ children }) {
   const { user, checkingAuth, token } = useContext(AuthContext);
   const [cart, setCart] = useState([]);
+  const [idCart, setIdCart] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const toggleCart = () => setIsOpen(prev => !prev);
+
+  const fetchCartId = async () => {
+    if (!user) return null;
+    try {
+      const res = await fetch(`${API}/shopping_carts/user/${user.id_user}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIdCart(data.data.id_cart);
+        return data.data.id_cart;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error al obtener id_cart:", error);
+      return null;
+    }
+  };
 
   const fetchCart = async () => {
     if (!user) return;
@@ -51,6 +70,7 @@ export function CartProvider({ children }) {
         return;
       }
       const id_cart = cartData.data.id_cart;
+      setIdCart(id_cart);
 
       const res = await fetch(`${API}/cart_items`, {
         method: "POST",
@@ -90,12 +110,13 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     if (!checkingAuth && user) {
+      fetchCartId();
       fetchCart();
     }
   }, [user, checkingAuth]);
 
   return (
-    <CartContext.Provider value={{ cart, setCart, loading, fetchCart, clearCart, removeFromCart, isOpen, toggleCart, addToCart }}>
+    <CartContext.Provider value={{ cart, setCart, idCart, loading, fetchCart, clearCart, removeFromCart, isOpen, toggleCart, addToCart }}>
       {children}
     </CartContext.Provider>
   );

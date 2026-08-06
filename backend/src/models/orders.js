@@ -25,6 +25,15 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
+        subtotal: {
+          type: DataTypes.DECIMAL(10, 2),
+          allowNull: true
+      },
+      discount_total: {
+          type: DataTypes.DECIMAL(10, 2),
+          allowNull: true,
+          defaultValue: 0
+      },
         status: {
             type: DataTypes.ENUM("pending", "paid", "canceled"),
             allowNull: false,

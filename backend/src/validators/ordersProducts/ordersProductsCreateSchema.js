@@ -23,6 +23,11 @@ const ordersProductsCreateSchema = Joi.object({
         "number.positive": `'unit_price' debe ser un número positivo.`,
         "any.required": `'unit_price' es obligatorio.`,
     }),
+    applied_discount_percentage: Joi.number().min(0).max(100).default(0).messages({
+        "number.base": `'applied_discount_percentage' debe ser un número.`,
+        "number.min": `'applied_discount_percentage' no puede ser negativo.`,
+        "number.max": `'applied_discount_percentage' no puede ser mayor a 100.`,
+    }),
 });
 
 module.exports = ordersProductsCreateSchema;

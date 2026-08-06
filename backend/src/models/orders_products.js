@@ -29,6 +29,11 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
+        applied_discount_percentage: {
+          type: DataTypes.DECIMAL(5, 2),
+          allowNull: true,
+          defaultValue: 0
+      },
         artist_name: {
           type: DataTypes.STRING(100),
           allowNull: true,

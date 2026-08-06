@@ -129,17 +129,17 @@ export default function ProductDetail() {
             )}
           </div>
 
-          {/* Included Resources: qué trae el combo */}
-          {product.includedResources?.length > 0 && (
+          {/* Contenido del pack: qué trae el combo */}
+          {product.contents?.length > 0 && (
             <div className="border-t border-text-muted/30 pt-4">
               <p className="text-accent-secondary text-xs uppercase tracking-widest mb-3">
-                // RECURSOS_INCLUIDOS
+      // RECURSOS_INCLUIDOS
               </p>
               <ul className="space-y-1.5">
-                {product.includedResources.map((res) => (
-                  <li key={res.id_resource} className="text-text-muted text-sm flex items-center gap-2">
+                {product.contents.map((content) => (
+                  <li key={content.id_product_content} className="text-text-muted text-sm flex items-center gap-2">
                     <span className="text-accent-secondary">✔</span>
-                    {res.category?.name} <span className="text-text-primary">× {res.quantity}</span>
+                    {content.category?.name} <span className="text-text-primary">× {content.quantity}</span>
                   </li>
                 ))}
               </ul>

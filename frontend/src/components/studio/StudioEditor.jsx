@@ -69,7 +69,7 @@ function CurvedText({ el, commonProps }) {
   });
 
   // normaliza para que la esquina arriba-izquierda del texto curvo quede en (0,0),
-  // igual que el ancla del texto recto — así no salta al activar/desactivar curva
+  // igual que el ancla del texto recto - así no salta al activar/desactivar curva
   const minX = Math.min(...raw.map(r => r.x - r.w / 2));
   const minY = Math.min(...raw.map(r => r.y - fontSize / 2));
 

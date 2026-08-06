@@ -32,6 +32,7 @@ export default function AdminLayout() {
             { to: "/admin/series", label: "// SERIES" },
             { to: "/admin/categories", label: "// CATEGORÍAS" },
             { to: "/admin/pricing-rules", label: "// PRICING RULES" },
+            { to: "/admin/series-discount-rules", label: "// DESCUENTOS POR SERIE" },
             { to: "/admin/studio", label: "// STUDIO" },
           ].map(({ to, label }) => (
             <NavLink

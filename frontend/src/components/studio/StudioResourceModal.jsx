@@ -7,6 +7,7 @@ export default function StudioResourceModal({
   const [tab, setTab] = useState(initialTab);
   const [activeCategory, setActiveCategory] = useState(null);
   const [search, setSearch] = useState("");
+  const [fileTypeFilter, setFileTypeFilter] = useState("all");
 
   useEffect(() => {
     if (isOpen) {
@@ -21,7 +22,12 @@ export default function StudioResourceModal({
   if (!isOpen) return null;
 
   const activeResources = (categories.find(c => c.id_studio_category === activeCategory)?.resources || [])
-    .filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
+    .filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(r => {
+      if (fileTypeFilter === "all") return true;
+      const isSvg = r.url.toLowerCase().endsWith(".svg");
+      return fileTypeFilter === "svg" ? isSvg : !isSvg;
+    });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
@@ -55,6 +61,26 @@ export default function StudioResourceModal({
                   border: `1px solid ${activeCategory === cat.id_studio_category ? "var(--color-accent-secondary)" : "var(--color-text-muted)"}`,
                 }}>
                 {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {tab === "images" && (
+          <div className="flex gap-2 px-4 pt-2">
+            {[
+              { key: "all", label: "Todo" },
+              { key: "png", label: "PNG" },
+              { key: "svg", label: "SVG" },
+            ].map(opt => (
+              <button key={opt.key} onClick={() => setFileTypeFilter(opt.key)}
+                className="px-3 py-1 text-xs uppercase tracking-widest"
+                style={{
+                  background: fileTypeFilter === opt.key ? "var(--color-accent-secondary)" : "transparent",
+                  color: fileTypeFilter === opt.key ? "var(--color-bg-dark)" : "var(--color-text-muted)",
+                  border: `1px solid ${fileTypeFilter === opt.key ? "var(--color-accent-secondary)" : "var(--color-text-muted)"}`,
+                }}>
+                {opt.label}
               </button>
             ))}
           </div>

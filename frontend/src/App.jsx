@@ -61,6 +61,7 @@ import AdminCategories from "./pages/Admin/AdminCategories";
 import AdminCustomizations from "./pages/Admin/AdminCustomizations";
 import AdminStudio from "./pages/Admin/AdminStudio";
 import AdminPricingRules from "./pages/Admin/AdminPricingRules";
+import AdminSeriesDiscountRules from "./pages/Admin/AdminSeriesDiscountRules";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -176,6 +177,8 @@ function AppContent() {
             <Route path="customizations" element={<AdminCustomizations />} />
             <Route path="studio" element={<AdminStudio />} />
             <Route path="pricing-rules" element={<AdminPricingRules />} />
+            <Route path="pricing-rules" element={<AdminPricingRules />} />
+            <Route path="series-discount-rules" element={<AdminSeriesDiscountRules />} />
           </Route>
 
           {/* 404 */}

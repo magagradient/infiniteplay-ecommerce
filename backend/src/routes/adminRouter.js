@@ -16,14 +16,16 @@ const completeCustomization = require("../controllers/admin/customizations/compl
 const createTechnicalDetail = require("../controllers/admin/technicalDetails/createTechnicalDetail");
 const updateTechnicalDetail = require("../controllers/admin/technicalDetails/updateTechnicalDetail");
 const deleteTechnicalDetail = require("../controllers/admin/technicalDetails/deleteTechnicalDetail");
-const createIncludedResource = require("../controllers/admin/includedResources/createIncludedResource");
-const updateIncludedResource = require("../controllers/admin/includedResources/updateIncludedResource");
-const deleteIncludedResource = require("../controllers/admin/includedResources/deleteIncludedResource");
 const createPricingRulesForCategory = require("../controllers/admin/pricingRules/createPricingRulesForCategory");
 const createProductContent = require("../controllers/admin/productContents/createProductContent");
 const getProductContents = require("../controllers/admin/productContents/getProductContents");
 const updateProductContent = require("../controllers/admin/productContents/updateProductContent");
 const deleteProductContent = require("../controllers/admin/productContents/deleteProductContent");
+const getSeriesDiscountRules = require("../controllers/admin/seriesDiscountRules/getSeriesDiscountRules");
+const createSeriesDiscountRule = require("../controllers/admin/seriesDiscountRules/createSeriesDiscountRule");
+const updateSeriesDiscountRule = require("../controllers/admin/seriesDiscountRules/updateSeriesDiscountRule");
+const deleteSeriesDiscountRule = require("../controllers/admin/seriesDiscountRules/deleteSeriesDiscountRule");
+
 
 
 // Rutas
@@ -41,12 +43,14 @@ router.post("/products/:id/technical-details", authMiddleware(["admin"]), create
 router.post("/pricing-rules/category/:id_category", authMiddleware(["admin"]), createPricingRulesForCategory);
 router.put("/technical-details/:id_detail", authMiddleware(["admin"]), updateTechnicalDetail);
 router.delete("/technical-details/:id_detail", authMiddleware(["admin"]), deleteTechnicalDetail);
-router.post("/products/:id/included-resources", authMiddleware(["admin"]), createIncludedResource);
-router.put("/included-resources/:id_resource", authMiddleware(["admin"]), updateIncludedResource);
-router.delete("/included-resources/:id_resource", authMiddleware(["admin"]), deleteIncludedResource);
 router.post("/products/:id/contents",authMiddleware(["admin"]),createProductContent);
 router.get("/products/:id/contents",authMiddleware(["admin"]),getProductContents);
 router.put("/product-contents/:id_product_content",authMiddleware(["admin"]),updateProductContent);
 router.delete("/product-contents/:id_product_content",authMiddleware(["admin"]),deleteProductContent);
+router.get("/series-discount-rules", authMiddleware(["admin"]), getSeriesDiscountRules);
+router.post("/series-discount-rules", authMiddleware(["admin"]), createSeriesDiscountRule);
+router.put("/series-discount-rules/:id_discount_rule", authMiddleware(["admin"]), updateSeriesDiscountRule);
+router.delete("/series-discount-rules/:id_discount_rule", authMiddleware(["admin"]), deleteSeriesDiscountRule);
+
 
 module.exports = router;

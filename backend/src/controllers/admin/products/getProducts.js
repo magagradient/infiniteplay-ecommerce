@@ -6,7 +6,7 @@ const {
   Keywords,
   Colors,
   ProductTechnicalDetails,
-  ProductIncludedResources,
+  ProductContents,
 } = require("../../../database/indexModels");
 
 const { successResponse, errorResponse } = require("../../../utils/responseHelper");
@@ -49,13 +49,18 @@ const getProducts = async (req, res) => {
           order: [["sort_order", "ASC"]],
         },
         {
-          model: ProductIncludedResources,
-          as: "includedResources",
+          model: ProductContents,
+          as: "contents",
           required: false,
           separate: true,
           include: [
-            { model: Categories, as: "category", attributes: ["id_category", "name"] },
+            {
+              model: Categories,
+              as: "category",
+              attributes: ["id_category", "name"],
+            },
           ],
+          order: [["id_product_content", "ASC"]],
         },
       ],
       order: [["createdAt", "DESC"]],

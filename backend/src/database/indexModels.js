@@ -17,7 +17,6 @@ const ProductKeywordsModel = require("../models/product_keywords");
 const ProductStylesModel = require("../models/product_styles");
 const ProductThemesModel = require("../models/product_themes");
 const ProductTechnicalDetailsModel = require("../models/product_technical_details");
-const ProductIncludedResourcesModel = require("../models/product_included_resources");
 const PricingRulesModel = require("../models/pricing_rules");
 const ProductContentsModel = require("../models/product_contents");
 
@@ -53,6 +52,7 @@ const InvoicesModel = require("../models/invoices");
 // Cupones y descargas: 
 const CouponsModel = require("../models/coupons");
 const DownloadLinksModel = require("../models/download_links");
+const SeriesDiscountRulesModel = require("../models/series_discount_rules");
 
 // Studio
 const StudioCategoriesModel = require("../models/studio_categories");
@@ -71,6 +71,7 @@ const models = {
   Colors: ColorsModel(sequelize, DataTypes),
   Coupons: CouponsModel(sequelize, DataTypes),
   DownloadLinks: DownloadLinksModel(sequelize, DataTypes),
+  SeriesDiscountRules: SeriesDiscountRulesModel(sequelize, DataTypes),
   FavoriteSeries: FavoriteSeriesModel(sequelize, DataTypes),
   FavoriteProducts: FavoriteProductsModel(sequelize, DataTypes),
   Invoices: InvoicesModel(sequelize, DataTypes),
@@ -87,7 +88,6 @@ const models = {
   ProductStyles: ProductStylesModel(sequelize, DataTypes),
   ProductThemes: ProductThemesModel(sequelize, DataTypes),
   ProductTechnicalDetails: ProductTechnicalDetailsModel(sequelize, DataTypes),
-  ProductIncludedResources: ProductIncludedResourcesModel(sequelize, DataTypes),
   ProductContents: ProductContentsModel(sequelize, DataTypes),
   Products: ProductsModel(sequelize, DataTypes),
   PricingRules: PricingRulesModel(sequelize, DataTypes),

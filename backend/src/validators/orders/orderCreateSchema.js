@@ -11,6 +11,14 @@ const orderCreateSchema = Joi.object({
         "date.base": `"order_date" debe ser una fecha válida.`,
         "date.format": `"order_date" debe tener formato ISO (YYYY-MM-DD).`
     }),
+    subtotal: Joi.number().positive().messages({
+        "number.base": `"subtotal" debe ser un número.`,
+        "number.positive": `"subtotal" debe ser un número positivo.`
+    }),
+    discount_total: Joi.number().min(0).messages({
+        "number.base": `"discount_total" debe ser un número.`,
+        "number.min": `"discount_total" no puede ser negativo.`
+    }),
     total: Joi.number().positive().required().messages({
         "number.base": `"total" debe ser un número.`,
         "number.positive": `"total" debe ser un número positivo.`,

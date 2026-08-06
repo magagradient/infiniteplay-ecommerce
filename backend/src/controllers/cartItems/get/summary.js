@@ -1,4 +1,4 @@
-const { CartItems, Products } = require("../../../database/indexModels");
+const { CartItems, Products, SeriesDiscountRules } = require("../../../database/indexModels");
 const responseHelper = require("../../../utils/responseHelper");
 
 const cartSummary = async (req, res) => {
@@ -20,7 +20,7 @@ const cartSummary = async (req, res) => {
             include: {
                 model: Products,
                 as: "product",
-                attributes: ["id_product", "title", "price"]
+                attributes: ["id_product", "title", "price", "id_series"],
             }
         });
 
@@ -37,28 +37,69 @@ const cartSummary = async (req, res) => {
         let subtotal = 0;
         let totalItems = 0;
         const products = [];
+        const piecesBySeries = {};
 
         items.forEach(item => {
             const itemPrice = item.product?.price || 0;
             subtotal += itemPrice * item.quantity;
             totalItems += item.quantity;
-            
+
+            const seriesId = item.product?.id_series;
+            if (seriesId) {
+                piecesBySeries[seriesId] = (piecesBySeries[seriesId] || 0) + item.quantity;
+            }
+
             products.push({
                 id_product: item.product.id_product,
                 title: item.product.title,
+                id_series: seriesId,
                 quantity: item.quantity,
                 unit_price: itemPrice,
-                total_price: itemPrice * item.quantity
+                total_price: itemPrice * item.quantity,
+                applied_discount_percentage: 0,
             });
         });
 
-        const discounts = 0; // Futuro: aplicar cupones o promociones
-        const total = subtotal - discounts;
+        const rules = await SeriesDiscountRules.findAll({
+            where: { is_active: true },
+            order: [["min_pieces", "DESC"]],
+        });
+
+        // Guarda qué % le corresponde a cada serie que tenga descuento aplicable
+        const discountPercentageBySeries = {};
+
+        Object.entries(piecesBySeries).forEach(([seriesId, count]) => {
+            const applicableRule = rules.find((r) => count >= r.min_pieces);
+            if (!applicableRule) return;
+            discountPercentageBySeries[seriesId] = parseFloat(applicableRule.discount_percentage);
+        });
+
+        // Aplica el % correspondiente a cada línea de producto
+        products.forEach((p) => {
+            if (p.id_series && discountPercentageBySeries[p.id_series] !== undefined) {
+                p.applied_discount_percentage = discountPercentageBySeries[p.id_series];
+            }
+        });
+
+        let discounts = 0;
+        Object.entries(piecesBySeries).forEach(([seriesId, count]) => {
+            const percentage = discountPercentageBySeries[seriesId];
+            if (percentage === undefined) return;
+
+            const seriesSubtotal = products
+                .filter((p) => p.id_series === parseInt(seriesId))
+                .reduce((sum, p) => sum + p.total_price, 0);
+
+            discounts += seriesSubtotal * (percentage / 100);
+        });
+
+        const roundedDiscounts = Math.round(discounts * 100) / 100;
+        const total = Math.round((subtotal - roundedDiscounts) * 100) / 100;
 
         return responseHelper.successResponse(res, {
             total_items: totalItems,
             subtotal,
-            discounts,
+            discounts: roundedDiscounts,
             total,
             products
         }, "cart_summary");

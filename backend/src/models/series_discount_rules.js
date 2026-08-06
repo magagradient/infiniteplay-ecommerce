@@ -1,46 +1,34 @@
 const { DataTypes, Sequelize } = require("sequelize");
 
 module.exports = (sequelize) => {
-  const ProductIncludedResources = sequelize.define(
-    "ProductIncludedResources",
+  const SeriesDiscountRules = sequelize.define(
+    "SeriesDiscountRules",
     {
-      id_resource: {
+      id_discount_rule: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
       },
-
-      id_product: {
+      min_pieces: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-          model: "products",
-          key: "id_product",
-        },
+        unique: true,
       },
-
-      id_category: {
-        type: DataTypes.INTEGER,
+      discount_percentage: {
+        type: DataTypes.DECIMAL(5, 2),
         allowNull: false,
-        references: {
-          model: "categories",
-          key: "id_category",
-        },
       },
-
-      quantity: {
-        type: DataTypes.INTEGER,
+      is_active: {
+        type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: 1,
+        defaultValue: true,
       },
-
       created_at: {
         type: DataTypes.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
         allowNull: false,
       },
-
       updated_at: {
         type: DataTypes.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
@@ -49,12 +37,12 @@ module.exports = (sequelize) => {
       },
     },
     {
-      tableName: "product_included_resources",
+      tableName: "series_discount_rules",
       timestamps: true,
       underscored: true,
       freezeTableName: true,
     }
   );
 
-  return ProductIncludedResources;
+  return SeriesDiscountRules;
 };

@@ -75,6 +75,9 @@ export default function AdminCreateProduct() {
   const [selectedContentCategory, setSelectedContentCategory] = useState(null);
   const [contentQuantity, setContentQuantity] = useState(1);
 
+  const [packSuggestedPrice, setPackSuggestedPrice] = useState(null);
+  const [missingPricingRules, setMissingPricingRules] = useState([]);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -98,7 +101,7 @@ export default function AdminCreateProduct() {
     fetch(`${API}/series`).then(r => r.json()).then(d => setSeriesList(d.data || []));
     fetch(`${API}/colors`).then(r => r.json()).then(d => setColorsList(d.data || []));
     fetch(`${API}/keywords`).then(r => r.json()).then(d => setKeywordsList(d.data || []));
-    getPricingRules(token).then(setPricingRules).catch(err => console.error("Error al cargar pricing rules:", err)); // ← esta línea es nueva
+    getPricingRules(token).then(setPricingRules).catch(err => console.error("Error al cargar pricing rules:", err));
   }, []);
 
   useEffect(() => {
@@ -125,6 +128,37 @@ export default function AdminCreateProduct() {
       setForm((prev) => ({ ...prev, price: rule.suggested_price }));
     }
   }, [form.id_category, form.artwork_level, pricingRules]);
+
+  useEffect(() => {
+    if (!productContents.length || !pricingRules.length) {
+      setPackSuggestedPrice(null);
+      setMissingPricingRules([]);
+      return;
+    }
+
+    let total = 0;
+    const missing = [];
+
+    productContents.forEach((item) => {
+      const rule = pricingRules.find(
+        (r) =>
+          r.id_category === item.id_category &&
+          r.artwork_level === form.artwork_level &&
+          r.is_active
+      );
+
+      if (!rule) {
+        missing.push(item.name);
+        return;
+      }
+
+      total += parseFloat(rule.suggested_price) * item.quantity;
+    });
+
+    setPackSuggestedPrice(total);
+    setMissingPricingRules(missing);
+  }, [productContents, form.artwork_level, pricingRules]);
+
 
   const handleChange = (e) => {
     if (e.target.name === "price") setPriceTouched(true);
@@ -253,9 +287,9 @@ export default function AdminCreateProduct() {
       prev.map((item) =>
         item.id_category === idCategory
           ? {
-              ...item,
-              quantity,
-            }
+            ...item,
+            quantity,
+          }
           : item
       )
     );
@@ -452,7 +486,7 @@ export default function AdminCreateProduct() {
                       🗑
                     </button>
 
-                    
+
 
                   </div>
                 </div>
@@ -460,6 +494,18 @@ export default function AdminCreateProduct() {
             </div>
 
           </div>
+        )}
+
+        {packSuggestedPrice !== null && (
+          <p className="text-[10px] uppercase tracking-widest mt-2" style={{ color: "var(--color-accent-secondary)" }}>
+            Valor de referencia (piezas sueltas): {packSuggestedPrice.toFixed(2)} USD
+          </p>
+        )}
+
+        {missingPricingRules.length > 0 && (
+          <p className="text-[10px] uppercase tracking-widest mt-1" style={{ color: "var(--color-accent)" }}>
+            ⚠ Falta cargar precio para: {missingPricingRules.join(", ")} en nivel {form.artwork_level}
+          </p>
         )}
 
         <div>

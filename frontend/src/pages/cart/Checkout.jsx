@@ -1,9 +1,10 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useLocation } from "../../context/LocationContext";
 import { createMPPreference, createPayPalOrder } from "../../services/api";
+import { getCartSummary } from "../../services/cart/cartService";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -16,7 +17,7 @@ const FIELD_LABELS = {
 
 export default function Checkout() {
   const { user, token } = useContext(AuthContext);
-  const { cart, clearCart } = useCart();
+  const { cart, idCart, clearCart } = useCart();
   const { country, formatPrice } = useLocation();
   const navigate = useNavigate();
 
@@ -24,8 +25,29 @@ export default function Checkout() {
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const total = cart.reduce((acc, item) => acc + (parseFloat(item.product?.price) * item.quantity), 0);
+  const [summary, setSummary] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(true);
+
   const customizableItems = cart.filter((item) => item.product?.is_customizable);
+
+  useEffect(() => {
+    const loadSummary = async () => {
+      if (!idCart) {
+        setLoadingSummary(false);
+        return;
+      }
+      try {
+        const data = await getCartSummary(idCart, token);
+        setSummary(data);
+      } catch (error) {
+        console.error("Error al cargar el resumen del carrito:", error);
+        setFormError("No se pudo calcular el total del carrito. Probá recargar la página.");
+      } finally {
+        setLoadingSummary(false);
+      }
+    };
+    loadSummary();
+  }, [idCart, token]);
 
   const updateCustomField = (id_product, fieldKey, value) => {
     setCustomData((prev) => ({
@@ -60,12 +82,17 @@ export default function Checkout() {
       return;
     }
 
+    if (!summary) {
+      setFormError("Todavía no se calculó el total. Esperá un momento e intentá de nuevo.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const orderRes = await fetch(`${API}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id_user: user.id_user, total: total.toFixed(2), status: "pending" }),
+        body: JSON.stringify({ id_user: user.id_user, total: summary.total.toFixed(2), status: "pending" }),
       });
       const orderData = await orderRes.json();
       if (!orderRes.ok) throw new Error("Error al crear la orden");
@@ -147,10 +174,30 @@ export default function Checkout() {
             ))
           )}
 
-          <div className="flex justify-between items-center px-6 py-4">
-            <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>TOTAL</span>
-            <span className="text-xl font-bold" style={{ color: "var(--color-accent)" }}>{formatPrice(total)}</span>
-          </div>
+          {loadingSummary ? (
+            <div className="px-6 py-4">
+              <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>[CALCULANDO_TOTAL...]</p>
+            </div>
+          ) : summary && (
+            <div className="px-6 py-4 space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>SUBTOTAL</span>
+                <span className="text-sm" style={{ color: "var(--color-text)" }}>{formatPrice(summary.subtotal)}</span>
+              </div>
+
+              {summary.discounts > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-accent-secondary)" }}>DESCUENTO POR SERIE</span>
+                  <span className="text-sm" style={{ color: "var(--color-accent-secondary)" }}>− {formatPrice(summary.discounts)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-2" style={{ borderTop: "1px solid var(--color-text-muted)" }}>
+                <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>TOTAL</span>
+                <span className="text-xl font-bold" style={{ color: "var(--color-accent)" }}>{formatPrice(summary.total)}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Formularios de personalización, uno por cada producto que lo requiera */}
@@ -234,7 +281,7 @@ export default function Checkout() {
 
         <button
           onClick={handleCheckout}
-          disabled={cart.length === 0 || submitting}
+          disabled={cart.length === 0 || submitting || loadingSummary}
           className="w-full py-4 font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ background: "var(--color-accent)", color: "var(--color-text)", border: "1px solid var(--color-accent)" }}
           onMouseEnter={e => { if (!submitting) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-accent)"; } }}
