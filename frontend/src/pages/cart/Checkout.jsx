@@ -5,6 +5,7 @@ import { useCart } from "../../context/CartContext";
 import { useLocation } from "../../context/LocationContext";
 import { createMPPreference, createPayPalOrder } from "../../services/api";
 import { getCartSummary } from "../../services/cart/cartService";
+import { validateCoupon } from "../../services/coupons/couponService";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -24,6 +25,11 @@ export default function Checkout() {
   const [customData, setCustomData] = useState({});
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount, discount_type }
+  const [couponError, setCouponError] = useState("");
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   const [summary, setSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
@@ -54,6 +60,35 @@ export default function Checkout() {
       ...prev,
       [id_product]: { ...prev[id_product], [fieldKey]: value },
     }));
+  };
+
+  const calculateCouponDiscount = (coupon, baseAmount) => {
+    if (!coupon) return 0;
+    const raw = coupon.discount_type === "percentage"
+      ? baseAmount * (coupon.discount / 100)
+      : Number(coupon.discount);
+    return Math.min(raw, baseAmount);
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError("");
+    setValidatingCoupon(true);
+    try {
+      const coupon = await validateCoupon(couponCode.trim(), user.id_user, token);
+      setAppliedCoupon(coupon);
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponError(error.message);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
   };
 
   const getRequiredFields = (product) => product.customization_fields || ["title", "artist"];
@@ -196,6 +231,65 @@ export default function Checkout() {
                 <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>TOTAL</span>
                 <span className="text-xl font-bold" style={{ color: "var(--color-accent)" }}>{formatPrice(summary.total)}</span>
               </div>
+            </div>
+          )}
+          {summary && (
+            <div className="px-6 py-4" style={{ borderTop: "1px solid var(--color-text-muted)" }}>
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--color-text-muted)" }}>
+                CUPÓN_DE_DESCUENTO
+              </p>
+
+              {appliedCoupon ? (
+                <div className="flex justify-between items-center px-4 py-2" style={{ border: "1px solid var(--color-accent-secondary)" }}>
+                  <span className="text-sm" style={{ color: "var(--color-accent-secondary)" }}>
+                    {appliedCoupon.code} · {appliedCoupon.discount_type === "percentage" ? `${appliedCoupon.discount}%` : formatPrice(appliedCoupon.discount)}
+                  </span>
+                  <button
+                    onClick={handleRemoveCoupon}
+                    className="text-xs uppercase tracking-widest"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    QUITAR
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="CÓDIGO"
+                    disabled={validatingCoupon}
+                    className="flex-1 px-4 py-2 text-sm uppercase outline-none transition-colors"
+                    style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-text-muted)", color: "var(--color-text)" }}
+                    onFocus={e => e.target.style.borderColor = "var(--color-accent-secondary)"}
+                    onBlur={e => e.target.style.borderColor = "var(--color-text-muted)"}
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={validatingCoupon || !couponCode.trim()}
+                    className="px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
+                    style={{ border: "1px solid var(--color-accent-secondary)", color: "var(--color-accent-secondary)" }}
+                  >
+                    {validatingCoupon ? "..." : "APLICAR"}
+                  </button>
+                </div>
+              )}
+
+              {couponError && (
+                <p className="text-xs uppercase mt-2" style={{ color: "var(--color-accent)" }}>
+                  [ERROR] {couponError}
+                </p>
+              )}
+
+              {appliedCoupon && (
+                <div className="flex justify-between items-center pt-3 mt-3" style={{ borderTop: "1px solid var(--color-text-muted)" }}>
+                  <span className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>TOTAL_FINAL</span>
+                  <span className="text-xl font-bold" style={{ color: "var(--color-accent)" }}>
+                    {formatPrice(summary.total - calculateCouponDiscount(appliedCoupon, summary.total))}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
