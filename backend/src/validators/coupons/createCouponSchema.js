@@ -15,6 +15,10 @@ const createCouponSchema = Joi.object({
             "number.positive": `"discount" debe ser positivo.`,
             "any.required": `"discount" es obligatorio.`
         }),
+    discount_type: Joi.string().valid("fixed", "percentage").default("fixed")
+        .messages({
+            "any.only": `"discount_type" debe ser "fixed" o "percentage".`
+        }),
     expiration_date: Joi.date().iso().required()
         .messages({
             "date.base": `"expiration_date" debe ser una fecha.`,
@@ -30,6 +34,12 @@ const createCouponSchema = Joi.object({
             "any.only": `"type" debe ser "general" o "personalized".`,
             "any.required": `"type" es obligatorio.`
         })
-});
+})
+    .when(Joi.object({ discount_type: Joi.valid("percentage") }).unknown(), {
+        then: Joi.object({
+            discount: Joi.number().max(100)
+                .messages({ "number.max": `Un descuento porcentual no puede superar 100.` })
+        })
+    });
 
 module.exports = createCouponSchema;

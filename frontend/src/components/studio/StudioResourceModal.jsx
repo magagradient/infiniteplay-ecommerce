@@ -19,7 +19,22 @@ export default function StudioResourceModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTab, isOpen, categories]);
 
-  if (!isOpen) return null;
+  const visibleCategories = categories.filter(cat =>
+    (cat.resources || []).some(r => {
+      if (fileTypeFilter === "all") return true;
+      const isSvg = r.url.toLowerCase().endsWith(".svg");
+      return fileTypeFilter === "svg" ? isSvg : !isSvg;
+    })
+  );
+
+  useEffect(() => {
+    if (visibleCategories.length > 0 && !visibleCategories.find(c => c.id_studio_category === activeCategory)) {
+      setActiveCategory(visibleCategories[0].id_studio_category);
+    } else if (visibleCategories.length === 0) {
+      setActiveCategory(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileTypeFilter, categories]);
 
   const activeResources = (categories.find(c => c.id_studio_category === activeCategory)?.resources || [])
     .filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
@@ -28,6 +43,8 @@ export default function StudioResourceModal({
       const isSvg = r.url.toLowerCase().endsWith(".svg");
       return fileTypeFilter === "svg" ? isSvg : !isSvg;
     });
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }}>
@@ -50,9 +67,9 @@ export default function StudioResourceModal({
           <button onClick={onClose} style={{ color: "var(--color-text-muted)" }}>✕</button>
         </div>
 
-        {tab === "images" && categories.length > 0 && (
+        {tab === "images" && visibleCategories.length > 0 && (
           <div className="flex gap-2 px-4 pt-3 overflow-x-auto" style={{ borderBottom: "1px solid var(--color-text-muted)", paddingBottom: 12 }}>
-            {categories.map(cat => (
+            {visibleCategories.map(cat => (
               <button key={cat.id_studio_category} onClick={() => setActiveCategory(cat.id_studio_category)}
                 className="px-3 py-1 text-xs uppercase tracking-widest whitespace-nowrap flex-shrink-0"
                 style={{
@@ -92,9 +109,9 @@ export default function StudioResourceModal({
             style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-text-muted)", color: "var(--color-text)" }} />
 
           {tab === "images" ? (
-            categories.length === 0 ? (
+            visibleCategories.length === 0 ? (
               <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>
-                Todavía no hay categorías cargadas
+                Sin recursos con este formato
               </p>
             ) : activeResources.length === 0 ? (
               <p className="text-xs uppercase tracking-widest" style={{ color: "var(--color-text-muted)" }}>

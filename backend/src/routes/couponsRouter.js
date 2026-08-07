@@ -9,6 +9,7 @@ const userIdParamSchema = require("../validators/shared/userIdParamSchema");
 const createCouponSchema = require("../validators/coupons/createCouponSchema");
 const updateCouponSchema = require("../validators/coupons/updateCouponSchema");
 const userCouponParamsSchema = require("../validators/coupons/userCouponParamsSchema");
+const validateCouponSchema = require("../validators/coupons/validateCouponSchema");
 
 // Controllers
 const index = require("../controllers/coupons/get/index");
@@ -17,6 +18,7 @@ const show = require("../controllers/coupons/get/show");
 
 const create = require("../controllers/coupons/post/create");
 const applyCoupon = require("../controllers/coupons/post/applyCoupon");
+const validateCoupon = require("../controllers/coupons/post/validateCoupon");
 
 const update = require("../controllers/coupons/put/update");
 
@@ -44,6 +46,12 @@ router.post("/",
     authMiddleware,
     validateSchema(createCouponSchema, "body"),
     create
+);
+
+router.post("/validate",
+    authMiddleware,
+    validateSchema(validateCouponSchema, "body"),
+    validateCoupon
 );
 
 router.post("/users/:id_user/coupons/:id_coupon",

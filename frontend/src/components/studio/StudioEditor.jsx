@@ -5,16 +5,13 @@ import StudioResourceModal from "./StudioResourceModal";
 import TextPropertiesPanel from "./TextPropertiesPanel";
 import StudioDraftsModal from "./StudioDraftsModal";
 
-
 const API = import.meta.env.VITE_API_URL;
-
 
 const FORMATS = {
   cover: { label: "COVER ART", width: 500, height: 500, exportWidth: 3000, exportHeight: 3000 },
   flyer: { label: "FLYER (A4)", width: 350, height: 495, exportWidth: 2480, exportHeight: 3508 },
   banner: { label: "BANNER", width: 500, height: 180, exportWidth: 1500, exportHeight: 500 },
 };
-
 
 const FONTS = ["Space Grotesk", "Arial", "Georgia", "Courier New", "Impact"];
 
@@ -23,10 +20,88 @@ function UploadedImage({ src, width, height }) {
   return image ? <KonvaImage image={image} width={width} height={height} listening={false} /> : null;
 }
 
-// renderiza un recurso del studio (sticker/forma) traído de la API
-function ResourceImage({ src, ...props }) {
-  const [image] = useImage(src, "anonymous");
-  return image ? <KonvaImage {...props} image={image} /> : null;
+// renderiza un recurso del studio (sticker/forma PNG) traído de la API, con filtro de matiz/saturación
+function ResourceImage({ src, hue = 0, saturation = 0, width, height, ...props }) {
+  const [rawImage] = useImage(src, "anonymous");
+  const [processedUrl, setProcessedUrl] = useState(src);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    if (!rawImage) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (!hue && saturation === 0) { setProcessedUrl(src); return; }
+      const canvas = document.createElement("canvas");
+      canvas.width = rawImage.naturalWidth || rawImage.width;
+      canvas.height = rawImage.naturalHeight || rawImage.height;
+      const ctx = canvas.getContext("2d");
+      ctx.filter = `hue-rotate(${hue}deg) saturate(${saturation + 100}%)`;
+      ctx.drawImage(rawImage, 0, 0);
+      setProcessedUrl(canvas.toDataURL());
+    }, 60);
+    return () => clearTimeout(debounceRef.current);
+  }, [rawImage, hue, saturation, src]);
+
+  const [finalImage] = useImage(processedUrl, "anonymous");
+  const lastGoodImage = useRef(null);
+  if (finalImage) lastGoodImage.current = finalImage;
+
+  if (!lastGoodImage.current) return null;
+  return <KonvaImage {...props} image={lastGoodImage.current} width={width} height={height} />;
+}
+
+// renderiza un recurso SVG: permite reemplazar su color puro y/o ajustar matiz/saturación
+function SvgResourceImage({ src, svgColor, hue = 0, saturation = 0, width, height, ...props }) {
+  const [dataUrl, setDataUrl] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(src)
+      .then(r => r.text())
+      .then(svgText => {
+        if (cancelled) return;
+        let finalSvg = svgText;
+        if (svgColor) {
+          finalSvg = finalSvg.replace(/fill="(?!none)[^"]*"/gi, `fill="${svgColor}"`);
+          finalSvg = finalSvg.replace(/fill:\s*(?!none)[^;"']+/gi, `fill:${svgColor}`);
+        }
+        const blob = new Blob([finalSvg], { type: "image/svg+xml" });
+        setDataUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => setDataUrl(null));
+    return () => { cancelled = true; };
+  }, [src, svgColor]);
+
+  useEffect(() => {
+    return () => { if (dataUrl) URL.revokeObjectURL(dataUrl); };
+  }, [dataUrl]);
+
+  const [rawImage] = useImage(dataUrl, "anonymous");
+  const [processedUrl, setProcessedUrl] = useState(null);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    if (!rawImage) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (!hue && saturation === 0) { setProcessedUrl(dataUrl); return; }
+      const canvas = document.createElement("canvas");
+      canvas.width = rawImage.naturalWidth || rawImage.width;
+      canvas.height = rawImage.naturalHeight || rawImage.height;
+      const ctx = canvas.getContext("2d");
+      ctx.filter = `hue-rotate(${hue}deg) saturate(${saturation + 100}%)`;
+      ctx.drawImage(rawImage, 0, 0);
+      setProcessedUrl(canvas.toDataURL());
+    }, 60);
+    return () => clearTimeout(debounceRef.current);
+  }, [rawImage, hue, saturation, dataUrl]);
+
+  const [finalImage] = useImage(processedUrl, "anonymous");
+  const lastGoodImage = useRef(null);
+  if (finalImage) lastGoodImage.current = finalImage;
+
+  if (!lastGoodImage.current) return null;
+  return <KonvaImage {...props} image={lastGoodImage.current} width={width} height={height} />;
 }
 
 let measureCtx;
@@ -320,15 +395,20 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
     setSelectedId(null);
   };
 
-  // agrega un recurso (sticker/forma) al canvas como elemento independiente
+
   const addResourceToCanvas = (resource) => {
     const size = 80;
+    const isSvg = resource.url.toLowerCase().endsWith(".svg");
     setElements(prev => [
       ...prev,
       {
         id: `resource-${resource.id_studio_resource}-${Date.now()}`,
         type: "resource",
         src: resource.url,
+        isSvg,
+        hue: 0,
+        saturation: 0,
+        svgColor: null,
         x: fmt.width / 2 - size / 2,
         y: fmt.height / 2 - size / 2,
         width: size,
@@ -344,6 +424,7 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
     if (!file) return;
     const size = 100;
     const id = `own-resource-${Date.now()}`;
+    const isSvg = file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
     pendingResourceFiles.current[id] = file;
     setElements(prev => [
       ...prev,
@@ -351,6 +432,10 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
         id,
         type: "resource",
         src: URL.createObjectURL(file),
+        isSvg,
+        hue: 0,
+        saturation: 0,
+        svgColor: null,
         x: fmt.width / 2 - size / 2,
         y: fmt.height / 2 - size / 2,
         width: size,
@@ -359,7 +444,7 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
         opacity: 1,
       },
     ]);
-    e.target.value = ""; // permite volver a elegir el mismo archivo dos veces seguidas
+    e.target.value = "";
   };
 
   const resolvePendingResources = async () => {
@@ -474,6 +559,27 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
 
   const selectedElement = elements.find(el => el.id === selectedId) || null;
 
+  const [localHue, setLocalHue] = useState(0);
+  const [localSat, setLocalSat] = useState(0);
+  const colorDebounceRef = useRef(null);
+
+  useEffect(() => {
+    if (selectedElement?.type === "resource") {
+      setLocalHue(selectedElement.hue ?? 0);
+      setLocalSat(selectedElement.saturation ?? 0);
+    }
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (selectedElement?.type !== "resource") return;
+    if (colorDebounceRef.current) clearTimeout(colorDebounceRef.current);
+    colorDebounceRef.current = setTimeout(() => {
+      updateSelectedElement({ hue: localHue, saturation: localSat });
+    }, 40);
+    return () => clearTimeout(colorDebounceRef.current);
+  }, [localHue, localSat]);
+
+
   return (
     <div style={{ fontFamily: "Space Grotesk" }}>
 
@@ -577,13 +683,25 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
               📂 Abrir biblioteca de recursos
             </button>
 
-            {canSaveDraft && (
-              <button onClick={() => setDraftsOpen(true)}
+            <div className="relative group">
+              <button
+                onClick={canSaveDraft ? () => setDraftsOpen(true) : undefined}
                 className="px-4 py-2 text-xs uppercase tracking-widest"
-                style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+                style={{
+                  border: "1px solid var(--color-text-muted)",
+                  color: "var(--color-text-muted)",
+                  cursor: canSaveDraft ? "pointer" : "not-allowed",
+                  opacity: canSaveDraft ? 1 : 0.35,
+                }}>
                 💾 Mis borradores
               </button>
-            )}
+              {!canSaveDraft && (
+                <div className="absolute bottom-full left-0 mb-2 px-3 py-2 text-xs uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                  style={{ background: "var(--color-bg-light)", border: "1px solid var(--color-accent)", color: "var(--color-accent)" }}>
+                  CREÁ UNA CUENTA PARA GUARDAR BORRADORES
+                </div>
+              )}
+            </div>
 
             <label className="px-4 py-2 text-xs uppercase tracking-widest cursor-pointer"
               style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
@@ -654,6 +772,7 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
               </div>
             </div>
           )}
+
 
           {/* Propiedades de texto — solo si el elemento seleccionado es texto */}
           {selectedElement?.type === "text" && (
@@ -775,9 +894,16 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
                       if (el.type === "line") return (
                         <Line {...commonProps} x={el.x} y={el.y} points={el.points} />
                       );
-                      if (el.type === "resource") return (
-                        <ResourceImage {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height} src={el.src} />
-                      );
+                      if (el.type === "resource") {
+                        if (el.isSvg) return (
+                          <SvgResourceImage {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height}
+                            src={el.src} svgColor={el.svgColor} hue={el.hue} saturation={el.saturation} />
+                        );
+                        return (
+                          <ResourceImage {...commonProps} x={el.x} y={el.y} width={el.width} height={el.height}
+                            src={el.src} hue={el.hue} saturation={el.saturation} />
+                        );
+                      }
                       return null;
                     })}
                     <Transformer
@@ -791,11 +917,49 @@ export default function StudioEditor({ hasAccess, canSaveDraft, token, studioPro
                   </Layer>
                 </Stage>
               </div>
-            </div>
+              </div>
           </div>
-        </div>
 
+          {selectedElement?.type === "resource" && (
+  <div className="pt-4 flex flex-col items-center gap-3">
+    {selectedElement.isSvg && (
+      <div className="flex items-center gap-3">
+        <input type="color" value={selectedElement.svgColor || "#ffffff"}
+          onChange={e => updateSelectedElement({ svgColor: e.target.value })}
+          className="w-8 h-8 cursor-pointer" />
+        <button onClick={() => updateSelectedElement({ svgColor: null })}
+          className="px-3 py-1 text-xs uppercase tracking-widest"
+          style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+          Restablecer color
+        </button>
       </div>
+    )}
+
+    <div className="flex items-center gap-6 flex-wrap justify-center">
+      <div>
+        <label className="text-xs block mb-1 text-center" style={{ color: "var(--color-text-muted)" }}>Matiz</label>
+        <input type="range" min="0" max="360" step="1"
+          value={localHue}
+          onChange={e => setLocalHue(parseFloat(e.target.value))} />
+      </div>
+      <div>
+        <label className="text-xs block mb-1 text-center" style={{ color: "var(--color-text-muted)" }}>Saturación</label>
+        <input type="range" min="-100" max="100" step="1"
+          value={localSat}
+          onChange={e => setLocalSat(parseFloat(e.target.value))} />
+      </div>
+    </div>
+
+    <button onClick={() => { setLocalHue(0); setLocalSat(0); }}
+      className="px-3 py-1 text-xs uppercase tracking-widest"
+      style={{ border: "1px solid var(--color-text-muted)", color: "var(--color-text-muted)" }}>
+      Restablecer matiz/sat.
+    </button>
+  </div>
+)}
+        </div>
+            </div>
+
 
       <StudioResourceModal
         isOpen={modalOpen}

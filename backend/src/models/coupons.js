@@ -16,6 +16,11 @@ module.exports = (sequelize) => {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         },
+        discount_type: {
+            type: DataTypes.ENUM('fixed', 'percentage'),
+            allowNull: false,
+            defaultValue: 'fixed'
+        },
         expiration_date: {
             type: DataTypes.DATEONLY,
             allowNull: false
@@ -25,6 +30,16 @@ module.exports = (sequelize) => {
             allowNull: true,
             defaultValue: null
         },
+        current_uses: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        is_active: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
+        },
         type: {
             type: DataTypes.ENUM('general', 'personalized'),
             allowNull: false
@@ -32,7 +47,7 @@ module.exports = (sequelize) => {
     }, {
         tableName: 'coupons',
         timestamps: false,
-        freezeTableName: true 
+        freezeTableName: true
     });
 
     return Coupons;

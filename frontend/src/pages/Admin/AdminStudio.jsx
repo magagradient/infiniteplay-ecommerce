@@ -177,7 +177,7 @@ export default function AdminStudio() {
           />
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,.svg"
             onChange={e => setResourceFile(e.target.files[0])}
             className="text-xs uppercase tracking-widest"
             style={{ color: "var(--color-text-muted)" }}
